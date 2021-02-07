@@ -18,7 +18,6 @@ const { createServer } = require('vite')
       port: FRONT_PORT
     }
   })
-  console.log('???')
   await server.listen()
 })();
 
@@ -65,7 +64,7 @@ const getNode = (result, path) => {
 
 const log = (...args) => debugLog.push(args);
 
-chokidar.watch(SAVES_URL).on('change', path => {
+const fileHandler = path => {
   const currentTime = Date.now();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.')) {
@@ -92,6 +91,7 @@ chokidar.watch(SAVES_URL).on('change', path => {
     // `on` can be used to diff between the initial level and restart
     const { on } =
       getNode(getNode(result, 'name === "survivors"'), 'class === "VehicleComponent"')
+    const BeachFireBurning = getNode(result, 'name === "BeachFireBurning"')
 
     // Converting the timestamp from C# ticks to js date
     const timestamp = ticksToDate(lastSavedTimeStamp).getTime();
@@ -135,6 +135,9 @@ chokidar.watch(SAVES_URL).on('change', path => {
     if (!isStart && prevEvent.biomeName && biomeName !== prevEvent.biomeName) {
       type = 'biome transition';
     }
+    if (biomeName === 'reef' && iconPath === 'LocCamp' && Object.keys(BeachFireBurning).length) {
+      type = 'end';
+    }
 
     // We could at first record the event to a variable,
     // and then _not_ push it if it is very stupid one
@@ -144,21 +147,28 @@ chokidar.watch(SAVES_URL).on('change', path => {
     // basically, when debugging, the unknown is ok to have, otherwise only push non-unknowns, and only save to file in the same condition.
 
     // Just pushing every event, so we could easily compare with previous ones
-    events.push({
-      filename, // for debugging only
-      type, // detected type of the event
-      timestamp, // Always needed
-      // these two are not needed in the log, useful for debugging
-      timeFromLast: timestamp - (prevEvent.timestamp || timestamp),
-      timeFromStart: timestamp - run.startDate,
-      scene, // 0 === level, 1 === map
-      distanceDriven, // 0 when starging, changing after level
-      distanceIndex, // Do we need this?
-      biomeName, // can be helpful
-      dayChunks, // time of day?
-      iconPath, // location
-      turn // changes between turns, 0 at the level init
-    })
+    const timeFromStart = timestamp - run.startDate;
+    const timeFromLast = timestamp - (prevEvent.timestamp || timestamp);
+    const shouldSkip = timeFromLast && !timeFromLast;
+    if (!shouldSkip) {
+      events.push({
+        filename, // for debugging only
+        type, // detected type of the event
+        timestamp, // Always needed
+        // these two are not needed in the log, useful for debugging
+        timeFromLast,
+        timeFromStart,
+        scene, // 0 === level, 1 === map
+        distanceDriven, // 0 when starging, changing after level
+        distanceIndex, // Do we need this?
+        biomeName, // can be helpful
+        dayChunks, // time of day?
+        iconPath, // location
+        turn // changes between turns, 0 at the level init
+      })
+    } else {
+      log('SKIPPED')
+    }
 
     // Writing the run to the file with the name based on the start's timestamp
     if (events.length && run.startDate) {
@@ -175,7 +185,10 @@ chokidar.watch(SAVES_URL).on('change', path => {
       err => { if (err) return console.log(err); }
     );
   });
-});
+};
+
+chokidar.watch(SAVES_URL).on('add', fileHandler);
+chokidar.watch(SAVES_URL).on('change', fileHandler);
 
 app.use(cors());
 app.get('/', (req, res) => res.json({ run, events }));

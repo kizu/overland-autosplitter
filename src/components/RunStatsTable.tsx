@@ -10,7 +10,7 @@ import styled, { css } from '@reshadow/react'
 
 interface RunStatsTableProps {
   run?: RunStats;
-  finalTime?: number;
+  finalTimeStamp?: number;
   segments: Segment[];
 }
 
@@ -23,9 +23,6 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
   let category = 'unknown';
   let variables: Variable[] = [];
 
-  // The city IL is not detected automatically, as it is the same for the regular run
-  // And we can basically record both the IL for the city and the regular run every time.
-  // And later maybe add some euristics like if you skip the whole first biome — ok, it is IL lol.
   if (biomeName !== 'city') {
     variables.push({
       label: 'IL',
@@ -34,7 +31,7 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
   }
 
   if (settings.allDogsMode) {
-    variables.push({ label: 'All Dogs?', value: 'yes' });
+    variables.push({ label: 'All Dogs', value: 'yes' });
   }
 
   if (settings.difficulty === 1) {
@@ -62,12 +59,50 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
   return [{ label: 'Category', value: category }, ...variables]
 }
 
-export const RunStatsTable = ({ run, finalTime, segments }: RunStatsTableProps) => {
+const getRunMeta = ({ buildNumber, settings, biomeName }: RunStats, isForcedIL: boolean) => {
+  let difficulty = 'unknown';
+
+  if (settings.difficulty === 1) {
+    if (settings.touristMode) {
+      difficulty = 'Tourist';
+    } else {
+      difficulty = 'Any%';
+    }
+  }
+
+  if (settings.difficulty === 2) {
+    difficulty = 'Hard';
+  }
+
+  if (settings.difficulty === 3) {
+    if (settings.alwaysNightMode && settings.extraCreaturesMode && settings.noReviveMode && settings.noStunMode && settings.turnTimerEnabled) {
+      difficulty = 'Ultimate';
+    } else {
+      difficulty = 'Expert';
+    }
+  }
+
+  const isIL = biomeName !== 'city' || isForcedIL;
+
+  return {
+    canBeIL: biomeName === 'city',
+    buildNumber,
+    category: !isIL ? difficulty : `${BIOME_NAME_MAP[biomeName]} ${difficulty}`,
+    isIL,
+    isAllDogs: settings.allDogsMode
+  };
+}
+
+export const RunStatsTable = ({ run, finalTimeStamp, segments }: RunStatsTableProps) => {
   if (!run || !run.startDate) {
     return null;
   }
 
-  const startDate = new Date(run.startDate).toISOString();
+  // { buildNumber, category, isIL }
+
+  const [isForcedIL, setIsForcedIL] = React.useState(false);
+
+  const { canBeIL, buildNumber, isIL, category, isAllDogs } = getRunMeta(run, isForcedIL);
 
   return styled`
   h1 {
@@ -75,30 +110,39 @@ export const RunStatsTable = ({ run, finalTime, segments }: RunStatsTableProps) 
     background: pink;
   }
   `(<div>
-    <h1>Overland build: {run.buildNumber}</h1>
-    <h2>Run settings</h2>
-    <ul>
-      {getCategoryAndVariables(run).map(
-        ({ label, value }) => <li key={label}>{label}: {value}</li>
-      )}
-    </ul>
-    <h2>Segments:</h2>
+    <h1>Overland <small>build {buildNumber}</small></h1>
+    <h2>
+      {category}
+      {' '}
+      {isAllDogs ? <small>(all dogs)</small> : null} {}
+      {' '}
+      {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null }
+    </h2>
     <ol>
       {
-        segments.map(({ name, start, end, subSegments }, index) => (<li key={index}>
-          {name}: <Timer from={start} finalTime={end ? end - start : finalTime} />
-          {end ? `, stops: ${subSegments.length}` : null}
+        segments.map(({ name, start, end, subSegments }, index) => {
+          const subItems = !(end && !isIL) && subSegments.length > 0 ? subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
+            <li key={subIndex}>{subName}: <Timer from={subStart} finalTimeStamp={subEnd || finalTimeStamp} /></li>
+          )) : null;
 
-          {!end && subSegments.length > 0 ? <ol>
-              {subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
-                <li key={subIndex}>{subName}: <Timer from={subStart} finalTime={subEnd ? subEnd - subStart:  finalTime} /></li>
-              )) }
+          return isIL ? index === 0 ? subItems : null : (<li key={index}>
+            {name}: <Timer from={start} finalTimeStamp={end || finalTimeStamp} />
+            {end ? `, stops: ${subSegments.length}` : null}
+
+            {subItems ? <ol>
+              {subItems}
             </ol> : null}
-
           </li>)
+        }
         )
       }
     </ol>
-    <p>Big timer: <Timer from={run.startDate} finalTime={finalTime} /></p>
+    <p>
+      Big timer:
+      { isIL
+        ? <Timer from={run.startDate} finalTimeStamp={segments[0]?.end || finalTimeStamp} />
+        : <Timer from={run.startDate} finalTimeStamp={finalTimeStamp} />
+      }
+      </p>
   </div>)
 };

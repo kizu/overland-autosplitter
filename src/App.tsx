@@ -15,25 +15,33 @@ const queryClient = new QueryClient({
 })
 
 const AppContent = () => {
-  const [finalTime, setfinalTime] = React.useState<number>();
+  const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
   const [runStats, setRunStats] = React.useState<RunStats>();
   const [segments, setSegments] = React.useState<Segment[]>([]);
   const [eventsCount, setEventsCount] = React.useState(0);
+  const runIsEnded = segments.length && segments[segments.length - 1].end;
+  React.useEffect(() => {
+    if (runIsEnded && runStats?.startDate) {
+      setfinalTimeStamp(runIsEnded);
+    } else if (finalTimeStamp) {
+      setfinalTimeStamp(undefined);
+    }
+  }, [runIsEnded]);
   return (
     <div className="App">
       {
         runStats ? <p>
-          <button onClick={() => setfinalTime(prev => prev || !runStats ? undefined : Date.now() - runStats?.startDate)}>{finalTime ? 'Resume timer' : 'Pause timer'}</button>
+          <button onClick={() => setfinalTimeStamp(prev => prev || !runStats ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
           <button onClick={() => {
             setRunStats(undefined);
-            setfinalTime(undefined);
+            setfinalTimeStamp(undefined);
           }}>Reset the run</button>
           <strong> {eventsCount} events</strong>
         </p> : null
       }
       <Fetcher setRunStats={setRunStats} setSegments={setSegments} setEventsCount={setEventsCount} />
       {runStats
-        ? <RunStatsTable run={runStats} finalTime={finalTime} segments={segments} />
+        ? <RunStatsTable run={runStats} finalTimeStamp={finalTimeStamp} segments={segments} />
         : <div>Waiting for the run to start…</div>
       }
     </div>

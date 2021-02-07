@@ -20,7 +20,7 @@ export interface RunStats {
   settings: RunSettings
 }
 
-export type EventType = 'unknown' | 'start' | 'first turn' | 'new turn' | 'map arrival' | 'biome transition' | 'subSegment start';
+export type EventType = 'unknown' | 'start' | 'first turn' | 'new turn' | 'map arrival' | 'biome transition' | 'subSegment start' | 'end';
 
 export interface Event {
   type: EventType;

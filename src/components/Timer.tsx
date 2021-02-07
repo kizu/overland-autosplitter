@@ -7,14 +7,14 @@ const oneHour = oneMinute * 60;
 
 interface TimerProps {
   from: number;
-  finalTime?: number;
+  finalTimeStamp?: number;
 }
 
-export const Timer = React.memo(({ from, finalTime }: TimerProps) => {
-  const [diffTimer, setDiffTimer] = React.useState(() => Date.now() - from);
-  useInterval(() => setDiffTimer(Date.now() - from), finalTime ? null : 16);
+export const Timer = React.memo(({ from, finalTimeStamp }: TimerProps) => {
+  const [now, setNow] = React.useState(Date.now);
+  useInterval(() => setNow(Date.now), finalTimeStamp ? null : 16);
 
-  const diff = finalTime || diffTimer;
+  const diff = (finalTimeStamp || now) - from;
 
   const hours = Math.floor(diff / oneHour);
   const minutes = Math.floor((diff - hours * oneHour) / oneMinute);
@@ -25,7 +25,7 @@ export const Timer = React.memo(({ from, finalTime }: TimerProps) => {
   const ss = `${seconds}`.padStart(2, '0');
   // If the time is final, do not round ms, otherwise it is better rounded,
   // so it would look better in the animation.
-  const ms = finalTime ? `${milliseconds}`.padStart(3, '0') : `${Math.floor(milliseconds / 10)}`.padStart(2, '0');''
+  const ms = `${milliseconds}`.padStart(3, '0');
 
   return <>{hh}:{mm}:{ss}.{ms}</>;
 });

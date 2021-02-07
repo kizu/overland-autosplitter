@@ -14,7 +14,6 @@ const getRun = () =>
     res.json()
   );
 
-
 export const Fetcher = ({ setRunStats, setSegments, setEventsCount }: FetcherProps) => {
   const { isLoading, error, data } = useQuery('run', getRun);
 
@@ -54,12 +53,17 @@ export const Fetcher = ({ setRunStats, setSegments, setEventsCount }: FetcherPro
           }
           lastSegment.subSegments.push(
             {
-              name: iconPath,
+              name: iconPath.replace(/^Loc/, ''),
               // First subSegment's start is the same as its parent
               start: isFirstSubSegment ? lastSegment.start : timestamp,
               subSegments: [] // potentially, turns / map transitions?
             }
           );
+        }
+        if (type === 'end') {
+          const lastSegment = newSegments[newSegments.length - 1];
+          lastSegment.end = timestamp;
+          lastSegment.subSegments[lastSegment.subSegments.length - 1].end = timestamp;
         }
       });
       setSegments(newSegments);
