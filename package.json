@@ -1,0 +1,29 @@
+{
+  "name": "overland-tracker-ui",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "node server",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@reshadow/react": "^0.0.1-issue-119.0",
+    "chokidar": "^3.5.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "jspath": "^0.4.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "react-query": "^3.7.1",
+    "ticks-to-date": "^1.0.3",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@vitejs/plugin-react-refresh": "^1.1.0",
+    "typescript": "^4.1.2",
+    "vite": "^2.0.0-beta.65"
+  }
+}
