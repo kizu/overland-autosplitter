@@ -116,6 +116,10 @@ chokidar.watch(SAVES_URL).on('change', path => {
       type = 'continue';
     }
 
+    if (turn === 0 && type !== 'start') {
+      type = 'subSegment start';
+    }
+
     if (turn === 1 && prevEvent.turn !== 1) {
       type = 'first turn';
     }

@@ -2,7 +2,8 @@
 
 import React from 'react'
 
-import type { RunStats } from '../types';
+import type { RunStats, Segment } from '../lib/types';
+import { BIOME_NAME_MAP } from '../lib/constants';
 import { Timer } from './Timer';
 
 import styled, { css } from '@reshadow/react'
@@ -10,22 +11,12 @@ import styled, { css } from '@reshadow/react'
 interface RunStatsTableProps {
   run?: RunStats;
   finalTime?: number;
+  segments: Segment[];
 }
 
 interface Variable {
   label: string;
   value: string;
-}
-
-const biomeNameMap = {
-  introduction: 'Introduction',
-  city: 'East Coast',
-  woodlands: 'Woodlands',
-  grasslands: 'Grasslands',
-  mountains: 'Mountains',
-  desert: 'Desert',
-  basin: 'Basin',
-  reef: 'Reef'
 }
 
 const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
@@ -38,7 +29,7 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
   if (biomeName !== 'city') {
     variables.push({
       label: 'IL',
-      value: biomeNameMap[biomeName as keyof typeof biomeNameMap]
+      value: BIOME_NAME_MAP[biomeName]
     })
   }
 
@@ -50,7 +41,7 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
     if (settings.touristMode) {
       category = 'Tourist';
     } else {
-      category = 'Normal';
+      category = 'Any%';
     }
   }
 
@@ -71,7 +62,7 @@ const getCategoryAndVariables = ({ settings, biomeName }: RunStats) => {
   return [{ label: 'Category', value: category }, ...variables]
 }
 
-export const RunStatsTable = ({ run, finalTime }: RunStatsTableProps) => {
+export const RunStatsTable = ({ run, finalTime, segments }: RunStatsTableProps) => {
   if (!run || !run.startDate) {
     return null;
   }
@@ -91,7 +82,23 @@ export const RunStatsTable = ({ run, finalTime }: RunStatsTableProps) => {
         ({ label, value }) => <li key={label}>{label}: {value}</li>
       )}
     </ul>
-    <p>run started at: {startDate}</p>
-    <p>from now: <Timer from={run.startDate} finalTime={finalTime} /></p>
+    <h2>Segments:</h2>
+    <ol>
+      {
+        segments.map(({ name, start, end, subSegments }, index) => (<li key={index}>
+          {name}: <Timer from={start} finalTime={end ? end - start : finalTime} />
+          {end ? `, stops: ${subSegments.length}` : null}
+
+          {!end && subSegments.length > 0 ? <ol>
+              {subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
+                <li key={subIndex}>{subName}: <Timer from={subStart} finalTime={subEnd ? subEnd - subStart:  finalTime} /></li>
+              )) }
+            </ol> : null}
+
+          </li>)
+        )
+      }
+    </ol>
+    <p>Big timer: <Timer from={run.startDate} finalTime={finalTime} /></p>
   </div>)
 };

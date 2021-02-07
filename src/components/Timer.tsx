@@ -1,5 +1,5 @@
 import React from 'react'
-import { useInterval } from '../hooks/useInterval'
+import { useInterval } from '../lib/useInterval'
 
 const oneSecond = 1000;
 const oneMinute = oneSecond * 60;
@@ -19,14 +19,13 @@ export const Timer = React.memo(({ from, finalTime }: TimerProps) => {
   const hours = Math.floor(diff / oneHour);
   const minutes = Math.floor((diff - hours * oneHour) / oneMinute);
   const seconds = Math.floor((diff - hours * oneHour - minutes * oneMinute) / oneSecond);
-  const ms = diff - hours * oneHour - minutes * oneMinute - seconds * oneSecond;
-  return <>
-    {`${hours}`.padStart(2, '0')}
-    :
-    {`${minutes}`.padStart(2, '0')}
-    :
-    {`${seconds}`.padStart(2, '0')}
-    .
-    {`${Math.floor(ms / 10)}`.padStart(2, '0')}
-  </>;
+  const milliseconds = diff - hours * oneHour - minutes * oneMinute - seconds * oneSecond;
+  const hh = `${hours}`.padStart(2, '0');
+  const mm = `${minutes}`.padStart(2, '0');
+  const ss = `${seconds}`.padStart(2, '0');
+  // If the time is final, do not round ms, otherwise it is better rounded,
+  // so it would look better in the animation.
+  const ms = finalTime ? `${milliseconds}`.padStart(3, '0') : `${Math.floor(milliseconds / 10)}`.padStart(2, '0');''
+
+  return <>{hh}:{mm}:{ss}.{ms}</>;
 });

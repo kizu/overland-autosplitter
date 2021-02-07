@@ -4,7 +4,7 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 
 import { Fetcher } from './components/Fetcher';
 import { RunStatsTable } from './components/RunStatsTable';
-import type { RunStats } from './types';
+import type { RunStats, Segment } from './lib/types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,8 +15,10 @@ const queryClient = new QueryClient({
 })
 
 const AppContent = () => {
-  const [runStats, setRunStats] = React.useState<RunStats>();
   const [finalTime, setfinalTime] = React.useState<number>();
+  const [runStats, setRunStats] = React.useState<RunStats>();
+  const [segments, setSegments] = React.useState<Segment[]>([]);
+  const [eventsCount, setEventsCount] = React.useState(0);
   return (
     <div className="App">
       {
@@ -26,11 +28,12 @@ const AppContent = () => {
             setRunStats(undefined);
             setfinalTime(undefined);
           }}>Reset the run</button>
+          <strong> {eventsCount} events</strong>
         </p> : null
       }
-      <Fetcher setRunStats={setRunStats} />
+      <Fetcher setRunStats={setRunStats} setSegments={setSegments} setEventsCount={setEventsCount} />
       {runStats
-        ? <RunStatsTable run={runStats} finalTime={finalTime} />
+        ? <RunStatsTable run={runStats} finalTime={finalTime} segments={segments} />
         : <div>Waiting for the run to start…</div>
       }
     </div>
