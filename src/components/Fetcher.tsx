@@ -29,8 +29,11 @@ export const Fetcher = ({ setRunStats, setSegments, setEventsCount }: FetcherPro
     if (!isLoading) {
       setEventsCount(events.length)
       const newSegments: Segment[] = [];
-      events.forEach(({ type, biomeName, timestamp, iconPath }: Event) => {
-        // TODO: for IL runs this can be different?
+      events.forEach(({ filename, type, biomeName, timestamp, iconPath }: Event) => {
+        // Move to the events population logic
+        if (filename === 'default.records') {
+          return;
+        }
 
         if (type === 'start' || type === 'biome transition') {
           const lastSegment = newSegments[newSegments.length - 1];

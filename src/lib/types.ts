@@ -23,6 +23,7 @@ export interface RunStats {
 export type EventType = 'unknown' | 'start' | 'first turn' | 'new turn' | 'map arrival' | 'biome transition' | 'subSegment start' | 'end';
 
 export interface Event {
+  filename: string;
   type: EventType;
   timestamp: number;
   biomeName: BiomeName;

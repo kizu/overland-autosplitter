@@ -6,29 +6,8 @@ const API_PORT = 3002;
 const SAVES_URL = '/Users/kizu/Library/Application Support/Finji/Overland/gameSaves';
 const LOGS_URL = '/Users/kizu/projects/overland-tracker-ui/logs';
 
-// Running the vite server to serve the frontend stuff.
-// Just the boilerplate from the docs:
-// https://vitejs.dev/guide/api-javascript.html#createserver
-const { createServer } = require('vite')
-; (async () => {
-  const server = await createServer({
-    configFile: false,
-    root: __dirname,
-    server: {
-      port: FRONT_PORT
-    }
-  })
-  await server.listen()
-})();
-
-
 // Running the API server and a watcher itself that would look at the overland save files.
 const fs = require('fs');
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-const port = 3002;
 
 const chokidar = require('chokidar');
 const xml2js = require('xml2js');
@@ -43,6 +22,20 @@ const debugLog = [];
 
 let run = {};
 let events = []; // use a hash by the initial party survivor probs?
+
+// Get the last run's info
+const pastRuns = [];
+fs.readdirSync(LOGS_URL).forEach(file => {
+  if (file.match(/^\d+.json$/)) {
+    pastRuns.push(file);
+  }
+});
+
+if (pastRuns.length) {
+  const lastRun = JSON.parse(fs.readFileSync(`${LOGS_URL}/${pastRuns.sort()[pastRuns.length - 1]}`, 'utf8'));
+  run = lastRun.run;
+  events = lastRun.events;
+}
 
 const resetRun = () => {
   run = {};
@@ -65,6 +58,7 @@ const getNode = (result, path) => {
 const log = (...args) => debugLog.push(args);
 
 const fileHandler = path => {
+  console.log(path, "??????????????????????????")
   const currentTime = Date.now();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.')) {
@@ -187,9 +181,38 @@ const fileHandler = path => {
   });
 };
 
-chokidar.watch(SAVES_URL).on('add', fileHandler);
+chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler);
 chokidar.watch(SAVES_URL).on('change', fileHandler);
 
-app.use(cors());
-app.get('/', (req, res) => res.json({ run, events }));
-app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));
+
+
+// Running the vite server to serve the frontend stuff.
+// Just the boilerplate from the docs:
+// https://vitejs.dev/guide/api-javascript.html#createserver
+const { createServer } = require('vite');
+(async () => {
+  const server = await createServer({
+    configFile: false,
+    root: __dirname,
+    server: {
+      port: FRONT_PORT
+    }
+  })
+  await server.listen()
+})();
+
+
+const express = require('express');
+const cors = require('cors');
+
+
+
+async function runSSE() {
+  const app = express();
+  app.use(cors());
+
+  app.get('/', (req, res) => res.json({ run, events }));
+  app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));
+};
+
+runSSE().catch(err => console.log(err));
