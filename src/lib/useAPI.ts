@@ -1,28 +1,15 @@
 import React from 'react'
-import { useQuery } from 'react-query'
-import type { RunStats, Segment, Event } from '../lib/types';
-import { BIOME_NAME_MAP, BiomeName } from '../lib/constants';
+import { useSSE } from 'react-hooks-sse';
+import type { RunStats, Segment, Event } from './types';
+import { BIOME_NAME_MAP } from './constants';
 
-interface FetcherProps {
-  setRunStats: React.Dispatch<React.SetStateAction<RunStats | undefined>>;
-  setSegments: React.Dispatch<React.SetStateAction<Segment[]>>;
-  setEventsCount: React.Dispatch<React.SetStateAction<number>>;
-}
+export const useAPI = () => {
+  const { run, events } = useSSE('message', {} as { run: RunStats, events: any });
 
-const getRun = () =>
-  fetch('http://localhost:3002/').then(res =>
-    res.json()
-  );
+  const [segments, setSegments] = React.useState<Segment[]>([]);
+  const [eventsCount, setEventsCount] = React.useState(0);
 
-export const Fetcher = ({ setRunStats, setSegments, setEventsCount }: FetcherProps) => {
-  const { isLoading, error, data } = useQuery('run', getRun);
-
-  if (error) {
-    console.error(error);
-  }
-
-  const { run, events } = data || {};
-  const { startDate } = run || {};
+  const isLoading = !run || !events;
 
   // Only update the segments when the new event appears
   React.useEffect(() => {
@@ -73,15 +60,5 @@ export const Fetcher = ({ setRunStats, setSegments, setEventsCount }: FetcherPro
     }
   }, [isLoading, events?.length]);
 
-
-  // Only update the stats if the startDate is changed
-  React.useEffect(() => {
-    if (!isLoading) {
-      setRunStats(run);
-    }
-  }, [isLoading, startDate]);
-
-  return null;
-  // return <ReactQueryDevtools initialIsOpen={false} />;
-}
-
+  return { runStats: run, segments, eventsCount };
+};

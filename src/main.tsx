@@ -1,21 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
-import { QueryClient, QueryClientProvider } from 'react-query'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchInterval: 100,
-    },
-  },
-})
+import { SSEProvider } from 'react-hooks-sse';
 
 ReactDOM.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-        <App />
-    </QueryClientProvider>
+    <SSEProvider endpoint="http://localhost:3002/events">
+      <App />
+    </SSEProvider>
   </React.StrictMode>,
   document.getElementById('root')
 )

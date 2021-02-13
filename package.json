@@ -15,7 +15,7 @@
     "jspath": "^0.4.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "react-query": "^3.7.1",
+    "react-hooks-sse": "^2.0.0",
     "ticks-to-date": "^1.0.3",
     "xml2js": "^0.4.23"
   },

@@ -57,8 +57,7 @@ const getNode = (result, path) => {
 
 const log = (...args) => debugLog.push(args);
 
-const fileHandler = path => {
-  console.log(path, "??????????????????????????")
+const fileHandler = res => path => {
   const currentTime = Date.now();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.')) {
@@ -143,7 +142,7 @@ const fileHandler = path => {
     // Just pushing every event, so we could easily compare with previous ones
     const timeFromStart = timestamp - run.startDate;
     const timeFromLast = timestamp - (prevEvent.timestamp || timestamp);
-    const shouldSkip = timeFromLast && !timeFromLast;
+    const shouldSkip = prevEvent.timestamp && !timeFromLast;
     if (!shouldSkip) {
       events.push({
         filename, // for debugging only
@@ -165,7 +164,12 @@ const fileHandler = path => {
     }
 
     // Writing the run to the file with the name based on the start's timestamp
-    if (events.length && run.startDate) {
+    if (!shouldSkip && events.length && run.startDate) {
+
+      console.log('Emit!', new Date(Date.now()).toISOString());
+      // Emit an SSE that contains the current 'count' as a string
+      res.write(`data: ${JSON.stringify({ run, events })}\n\n`);
+
       fs.writeFile(
         `${LOGS_URL}/${run.startDate}.json`,
         JSON.stringify({ run, events }, null, 2),
@@ -180,10 +184,6 @@ const fileHandler = path => {
     );
   });
 };
-
-chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler);
-chokidar.watch(SAVES_URL).on('change', fileHandler);
-
 
 
 // Running the vite server to serve the frontend stuff.
@@ -210,6 +210,21 @@ const cors = require('cors');
 async function runSSE() {
   const app = express();
   app.use(cors());
+  app.get('/events', async function (req, res) {
+    console.log('Got /events');
+    res.set({
+      'Cache-Control': 'no-cache',
+      'Content-Type': 'text/event-stream',
+      'Connection': 'keep-alive'
+    });
+    res.flushHeaders();
+
+    res.write('retry: 10000\n\n');
+    res.write(`data: ${JSON.stringify({ run, events })}\n\n`);
+
+    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(res));
+    chokidar.watch(SAVES_URL).on('change', fileHandler(res));
+  });
 
   app.get('/', (req, res) => res.json({ run, events }));
   app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));

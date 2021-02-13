@@ -5,15 +5,13 @@ import { styles } from './App.styles';
 import { getRunMeta } from '../lib/getRunMeta';
 import { Timer } from './Timer';
 
-import { Fetcher } from './Fetcher';
-import type { RunStats, Segment } from '../lib/types';
+import { useAPI } from '../lib/useAPI';
 import styled, { use } from '@reshadow/react'
 
 function App() {
   const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
-  const [runStats, setRunStats] = React.useState<RunStats>();
-  const [segments, setSegments] = React.useState<Segment[]>([]);
-  const [eventsCount, setEventsCount] = React.useState(0);
+  const { runStats, eventsCount, segments } = useAPI();
+
   const runIsEnded = segments.length && segments[segments.length - 1].end;
   React.useEffect(() => {
     if (runIsEnded && runStats?.startDate) {
@@ -29,7 +27,6 @@ function App() {
 
   return styled(styles)(
     <div {...use({ Root: true })}>
-      <Fetcher setRunStats={setRunStats} setSegments={setSegments} setEventsCount={setEventsCount} />
       <main>
       {runStats && runStats.startDate
         ? <React.Fragment>
@@ -76,10 +73,10 @@ function App() {
         {
           runStats ? <p>
             <button onClick={() => setfinalTimeStamp(prev => prev || !runStats ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
-            <button onClick={() => {
+            {/* <button onClick={() => {
               setRunStats(undefined);
               setfinalTimeStamp(undefined);
-            }}>Reset the run</button>
+            }}>Reset the run</button> */}
             <strong> {eventsCount} events</strong>
             {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
           </p> : null
