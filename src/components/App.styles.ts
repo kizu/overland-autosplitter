@@ -2,11 +2,11 @@ import { css } from '@reshadow/react';
 
 export const styles = css`
   :global(html) {
-    --color-main: #FFF7E4;
-    --color-bg: #0D181C;
+    --color-main: #FAF7E5;
+    --color-bg: #0C1B1E;
     --misc-color: rgba(255,255,255,0.75);
 
-    --font-large: 48.6px;
+    --font-large: 50px;
     --font-regular: 18px;
     --font-small: 14px;
 
@@ -17,9 +17,10 @@ export const styles = css`
     margin: 0;
 
     font-family: Lato, Helvetica Neue, Arial, sans-serif;
+    font-family: Nunito Sans, Helvetica Neue, Arial, sans-serif;
     font-weight: var(--weight-bold);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.2px;
 
     color: var(--color-main);
     background: var(--color-bg); /* Consider transparent, for the browsersource? */
@@ -37,13 +38,35 @@ export const styles = css`
   }
 
   main {
-    width: 280px;
-    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    height: 505px;
+    max-height: calc(100vh - 20px);
+    margin: 10px;
 
     font-size: var(--font-regular);
+
+    overflow: hidden;
+    resize: both;
+
+    /* To hide the resizer unless hovered */
+    &:not(:hover):not(:active) {
+      visibility: hidden;
+    }
+    & > * {
+      visibility: visible;
+    }
   }
 
-  h1,
+  main > ol {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
   h2 {
     display: flex;
     justify-content: space-between;
@@ -52,29 +75,16 @@ export const styles = css`
     margin: 0;
 
     font: inherit;
-  }
-
-  h1 {
-    position: relative;
-    font-size: var(--font-large);
-    line-height: 0.7;
-    padding-bottom: 0.055em;
-
-    font-weight: var(--weight-black);
-    letter-spacing: 2px;
-  }
-
-  h2 {
     position: relative;
     font-size: var(--font-small);
     font-weight: var(--weight-bold);
     padding: 5px 0;
     border-bottom: 3px solid;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
   }
 
   ol {
-    padding: 0;
+    padding: 0 0 5px;
     margin: 0;
 
     li > & {
@@ -90,12 +100,22 @@ export const styles = css`
 
     padding: 5px 0;
 
+    & + & {
+      padding-top: 0;
+    }
+
+    &[|isDisabled] {
+      opacity: 0.35;
+    }
+
     & & {
-      padding: 0 0 0 20px;
+      padding: 0 0 0 10px;
       font-size: var(--font-small);
     }
 
-    & > span + span {
+    /* Reshadow has a bug where we can't target a React.memo-wrapped elements */
+    & > span + *,
+    & > button + * {
       margin-left: auto;
       padding-left: 4px;
     }
@@ -110,11 +130,17 @@ export const styles = css`
     display: flex;
     justify-content: flex-end;
 
-    padding: 10px 0;
+    margin-top: auto;
+    padding: 5px 0;
     border-top: 3px solid;
   }
 
   aside {
     margin-top: auto;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
   }
 `;

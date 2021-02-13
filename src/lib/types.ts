@@ -1,5 +1,5 @@
 
-import type { BiomeName  } from './constants';
+import type { BiomeKey, BiomeName } from './constants';
 
 export interface RunSettings {
   restartEnabled: boolean;
@@ -16,7 +16,7 @@ export interface RunSettings {
 export interface RunStats {
   startDate: number,
   buildNumber: number,
-  biomeName: BiomeName,
+  biomeName: BiomeKey,
   settings: RunSettings
 }
 
@@ -26,14 +26,16 @@ export interface Event {
   filename: string;
   type: EventType;
   timestamp: number;
-  biomeName: BiomeName;
+  biomeName: BiomeKey;
   iconPath: string;
   turn: number;
 }
 
-export interface Segment {
-  name: string;
-  start: number;
+export type SubSegmentName = 'Roadblock' | 'Survivor' | 'Vehicle' | 'Fuel' | 'GasStation' | 'Camp';
+
+export interface Segment<T = BiomeName> {
+  name: T;
+  start?: number;
   end?: number;
-  subSegments: Segment[];
+  subSegments: Segment<SubSegmentName>[];
 }

@@ -40,8 +40,8 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
   const minutes = Math.floor((diff - hours * oneHour) / oneMinute);
   const seconds = Math.floor((diff - hours * oneHour - minutes * oneMinute) / oneSecond);
   const milliseconds = diff - hours * oneHour - minutes * oneMinute - seconds * oneSecond;
-  const mm = `${minutes}`.padStart(hours !== 0 ? 2 : 1, '0');
-  const ss = `${seconds}`.padStart(2, '0');
+  const mm = `${minutes}`.padStart(hours ? 2 : 1, '0');
+  const ss = `${seconds}`.padStart(minutes ? 2 : 1, '0');
   // If the time is final, do not round ms, otherwise it is better rounded,
   // so it would look better in the animation.
   const ms = `${milliseconds}`.padStart(3, '0');
@@ -50,8 +50,9 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
 
   return styled(styles)(
     <time {...use({ isLarge })} dateTime={dateTime}>
-      {hours !== 0 ? `${hours}:` : null}
-      {mm}:{ss}
+      {hours ? `${hours}:` : null}
+      {minutes ? `${mm}:` : null }
+      {ss}
       {isLarge ? <small>.{ms}</small> : `.${ms.substring(0, 1)}`}
     </time>);
 });

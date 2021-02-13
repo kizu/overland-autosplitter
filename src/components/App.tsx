@@ -4,13 +4,16 @@ import React from 'react'
 import { styles } from './App.styles';
 import { getRunMeta } from '../lib/getRunMeta';
 import { Timer } from './Timer';
+import { Logo } from './Logo';
+import { StopsIcon } from './StopsIcon';
 
 import { useAPI } from '../lib/useAPI';
 import styled, { use } from '@reshadow/react'
 
 function App() {
   const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
-  const { runStats, eventsCount, segments } = useAPI();
+  const [limit, setLimit] = React.useState<number>()
+  const { runStats, eventsCount, segments } = useAPI(limit);
 
   const runIsEnded = segments.length && segments[segments.length - 1].end;
   React.useEffect(() => {
@@ -25,12 +28,14 @@ function App() {
 
   const { canBeIL, buildNumber, isIL, category, isAllDogs } = getRunMeta(runStats, isForcedIL);
 
+  const [expandedSegment, setExpandedSegment] = React.useState<number>();
+
   return styled(styles)(
     <div {...use({ Root: true })}>
       <main>
       {runStats && runStats.startDate
         ? <React.Fragment>
-          <h1>Overland</h1>
+          <Logo />
           <h2>
             <span>
               {category}
@@ -41,17 +46,27 @@ function App() {
           <ol>
             {
               segments.map(({ name, start, end, subSegments }, index) => {
-                const subItems = !(end && !isIL) && subSegments.length > 0 ? subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
-                  <li key={subIndex}>
+                const isExpanded = expandedSegment === undefined ? !end : expandedSegment === index;
+                const hasOnlyRoadblock = subSegments.length === 1 && subSegments[0].name === 'Roadblock';
+                const subItems = !(!isExpanded && !isIL) && subSegments.length > 0 && !hasOnlyRoadblock ? subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
+                  <li key={subIndex} {...use({isDisabled: !subStart }) }>
                     <span>{subName}</span>
-                    <Timer from={subStart} finalTimeStamp={subEnd || finalTimeStamp} />
+                    {subStart ? <Timer from={subStart} finalTimeStamp={subEnd || finalTimeStamp} /> : <span>-</span> }
                   </li>
                 )) : null;
 
+                const NameAs = end ? 'button' : 'span';
+                const nameProps = end ? {
+                  type: 'button' as const,
+                  onClick: () => setExpandedSegment(prev => prev === index ? undefined : index)
+                } : {};
+
                 return isIL ? index === 0 ? subItems : null : (
-                  <li key={index}>
-                    <span>{name} {end ? <small>{subSegments.length} stops</small> : null}</span>
-                    <Timer from={start} finalTimeStamp={end || finalTimeStamp} />
+                  <li key={index} {...use({ isDisabled: !start })}>
+                    <NameAs
+                      {...nameProps}
+                    >{name} {end && !isExpanded ? <StopsIcon>{subSegments.length}</StopsIcon> : null}</NameAs>
+                    {start ? <Timer from={start} finalTimeStamp={end || finalTimeStamp} /> : <span>-</span>}
                     {subItems ? <ol>{subItems}</ol> : null}
                   </li>
                 );
@@ -77,11 +92,25 @@ function App() {
               setRunStats(undefined);
               setfinalTimeStamp(undefined);
             }}>Reset the run</button> */}
-            <strong> {eventsCount} events</strong>
+
             {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
           </p> : null
         }
         <footer>
+          <p>
+            {eventsCount} events
+            <input
+              value={limit}
+              type="number"
+              onChange={
+                ({ target: { value } }) => {
+                  const result = parseInt(value, 10);
+                  const isValid = !isNaN(result) && result >= 0
+                  setLimit(isValid ? result : undefined);
+                }
+              }
+            />
+          </p>
           <p>Game build {buildNumber}</p>
         </footer>
       </aside>

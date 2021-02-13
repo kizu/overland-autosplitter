@@ -1,20 +1,59 @@
 import React from 'react'
 import { useSSE } from 'react-hooks-sse';
-import type { RunStats, Segment, Event } from './types';
+import type { RunStats, Segment, Event, SubSegmentName } from './types';
 import { BIOME_NAME_MAP } from './constants';
 
-export const useAPI = () => {
-  const { run, events } = useSSE('message', {} as { run: RunStats, events: any });
+const biomeNames = Object.values(BIOME_NAME_MAP);
+
+const fillSegments = (segments: Segment[]) => {
+  const resultSegments = [...segments];
+
+  const lastSegment = segments[segments.length - 1];
+  const subSegments = lastSegment?.subSegments || [];
+  const lastSubSegment = subSegments[subSegments.length - 1]?.name;
+  const finalSubSegment = lastSegment.name === 'Reef' ? 'Camp' : 'Roadblock';
+  if (lastSubSegment && lastSubSegment !== finalSubSegment) {
+    resultSegments[resultSegments.length - 1].subSegments.push({
+      name: finalSubSegment,
+      subSegments: []
+    })
+  }
+
+  // We discard the potential East Coast IL here for now.
+  const isIL = segments[0]?.name !== 'East Coast';
+  // Also, if we'd have a way to continue the runs starting not from
+  // the East Coast, we could want to have this without a condition.
+  if (!isIL) {
+    const currentIndex = biomeNames.indexOf(segments[segments.length - 1]?.name);
+    const futureSegments = biomeNames.slice(currentIndex + 1);
+    futureSegments.forEach(segment => {
+      resultSegments.push({
+        name: segment,
+        subSegments: []
+      })
+    });
+  }
+  return resultSegments;
+}
+
+export const useAPI = (limit?: number) => {
+  const { run, events: allEvents } = useSSE('message', {} as { run: RunStats, events: any[] });
+
+  const events = React.useMemo(
+    () => limit === undefined ? allEvents : allEvents.slice(0, limit),
+    [allEvents, limit]
+  );
 
   const [segments, setSegments] = React.useState<Segment[]>([]);
   const [eventsCount, setEventsCount] = React.useState(0);
+
 
   const isLoading = !run || !events;
 
   // Only update the segments when the new event appears
   React.useEffect(() => {
     if (!isLoading) {
-      setEventsCount(events.length)
+      setEventsCount(allEvents.length)
       const newSegments: Segment[] = [];
       events.forEach(({ filename, type, biomeName, timestamp, iconPath }: Event) => {
         // Move to the events population logic
@@ -43,7 +82,7 @@ export const useAPI = () => {
           }
           lastSegment.subSegments.push(
             {
-              name: iconPath.replace(/^Loc/, ''),
+              name: iconPath.replace(/^Loc/, '') as SubSegmentName,
               // First subSegment's start is the same as its parent
               start: isFirstSubSegment ? lastSegment.start : timestamp,
               subSegments: [] // potentially, turns / map transitions?
@@ -56,7 +95,7 @@ export const useAPI = () => {
           lastSegment.subSegments[lastSegment.subSegments.length - 1].end = timestamp;
         }
       });
-      setSegments(newSegments);
+      setSegments(fillSegments(newSegments));
     }
   }, [isLoading, events?.length]);
 

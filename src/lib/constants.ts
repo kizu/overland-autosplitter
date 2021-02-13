@@ -9,4 +9,7 @@ export const BIOME_NAME_MAP = {
   reef: 'Reef'
 } as const;
 
-export type BiomeName = keyof typeof BIOME_NAME_MAP;
+type ValueOf<T> = T[keyof T];
+
+export type BiomeKey = keyof typeof BIOME_NAME_MAP;
+export type BiomeName = ValueOf<typeof BIOME_NAME_MAP>;

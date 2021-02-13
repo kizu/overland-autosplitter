@@ -57,7 +57,8 @@ const getNode = (result, path) => {
 
 const log = (...args) => debugLog.push(args);
 
-const fileHandler = res => path => {
+const fileHandler = resRef => path => {
+  const res = resRef.current;
   const currentTime = Date.now();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.')) {
@@ -166,7 +167,7 @@ const fileHandler = res => path => {
     // Writing the run to the file with the name based on the start's timestamp
     if (!shouldSkip && events.length && run.startDate) {
 
-      console.log('Emit!', new Date(Date.now()).toISOString());
+      log('Pushed to client at', new Date(Date.now()).toISOString());
       // Emit an SSE that contains the current 'count' as a string
       res.write(`data: ${JSON.stringify({ run, events })}\n\n`);
 
@@ -206,12 +207,13 @@ const express = require('express');
 const cors = require('cors');
 
 
+const resRef = {};
 
 async function runSSE() {
   const app = express();
   app.use(cors());
   app.get('/events', async function (req, res) {
-    console.log('Got /events');
+    resRef.current = res;
     res.set({
       'Cache-Control': 'no-cache',
       'Content-Type': 'text/event-stream',
@@ -222,8 +224,8 @@ async function runSSE() {
     res.write('retry: 10000\n\n');
     res.write(`data: ${JSON.stringify({ run, events })}\n\n`);
 
-    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(res));
-    chokidar.watch(SAVES_URL).on('change', fileHandler(res));
+    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(resRef));
+    chokidar.watch(SAVES_URL).on('change', fileHandler(resRef));
   });
 
   app.get('/', (req, res) => res.json({ run, events }));
