@@ -30,7 +30,7 @@ export interface Event {
   turn: number;
 }
 
-export type SubSegmentName = 'Roadblock' | 'Survivor' | 'Vehicle' | 'Fuel' | 'GasStation' | 'Camp' | 'Reef';
+export type SubSegmentName = 'Roadblock' | 'Survivor' | 'Vehicle' | 'Fuel' | 'GasStation' | 'Camp' | 'Reef' | 'Beach';
 
 export interface Segment<T = BiomeName> {
   name: T;

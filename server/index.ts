@@ -1,5 +1,18 @@
 // I'm not a server person, so sorry for the mess here lol.
 
+import * as fs from 'fs';
+import * as chokidar from 'chokidar';
+import * as xml2js from 'xml2js';
+import * as JSPath from 'jspath';
+import { default as ticksToDate } from 'ticks-to-date';
+// @ts-ignore
+import { createServer } from 'vite';
+
+import { RunStats } from '../src/lib/types';
+
+import express from 'express';
+import cors from 'cors';
+
 // For now these live here, later could be moved to a config file.
 const FRONT_PORT = 3000;
 const API_PORT = 3002;
@@ -7,25 +20,18 @@ const SAVES_URL = '/Users/kizu/Library/Application Support/Finji/Overland/gameSa
 const LOGS_URL = '/Users/kizu/projects/overland-tracker-ui/logs';
 
 // Running the API server and a watcher itself that would look at the overland save files.
-const fs = require('fs');
 
-const chokidar = require('chokidar');
-const xml2js = require('xml2js');
-
-const JSPath = require('jspath');
-
-const ticksToDate = require('ticks-to-date');
 
 // options
 
-const debugLog = [];
+const debugLog: any[] = [];
 
-let run = {};
-let events = []; // use a hash by the initial party survivor probs?
+let run: RunStats = {} as RunStats;
+let events: any[] = []; // use a hash by the initial party survivor probs?
 
 // Get the last run's info
-const pastRuns = [];
-fs.readdirSync(LOGS_URL).forEach(file => {
+const pastRuns: string[] = [];
+fs.readdirSync(LOGS_URL).forEach((file: string) => {
   if (file.match(/^\d+.json$/)) {
     pastRuns.push(file);
   }
@@ -38,12 +44,14 @@ if (pastRuns.length) {
 }
 
 const resetRun = () => {
-  run = {};
+  run = {} as RunStats;
   events = [];
 };
 
-const getNode = (result, path) => {
-  const node = JSPath.apply(`..*{.$.${path}}[0]`, result);
+const getNode = (result: any, path: string) => {
+  // we need any here as the type definition is wrong to say it returns an array,
+  // while in reality it can be a single item when there is [] in the path.
+  const node = JSPath.apply(`..*{.$.${path}}[0]`, result) as any;
   if (node) {
     if (node['_']) {
       return JSON.parse(node['_']);
@@ -55,9 +63,9 @@ const getNode = (result, path) => {
   return {};
 }
 
-const log = (...args) => debugLog.push(args);
+const log = (...args: any[]) => debugLog.push(args);
 
-const fileHandler = resRef => path => {
+const fileHandler = (resRef: any) => (path: string) => {
   const res = resRef.current;
   const currentTime = new Date(Date.now()).toISOString();
   log('FS change!', { path, currentTime })
@@ -88,7 +96,11 @@ const fileHandler = resRef => path => {
     const BeachFireBurning = getNode(result, 'name === "BeachFireBurning"')
 
     // Converting the timestamp from C# ticks to js date
-    const timestamp = ticksToDate(lastSavedTimeStamp).getTime();
+    const timestamp = ticksToDate(lastSavedTimeStamp)?.getTime();
+    if (!timestamp) {
+      log('Error in converting timestamp', lastSavedTimeStamp);
+      return;
+    }
 
     // Getting the previous event and setting the initial type
     const prevEvent = events[events.length - 1] || {};
@@ -181,11 +193,11 @@ const fileHandler = resRef => path => {
 // Running the vite server to serve the frontend stuff.
 // Just the boilerplate from the docs:
 // https://vitejs.dev/guide/api-javascript.html#createserver
-const { createServer } = require('vite');
 (async () => {
   const server = await createServer({
     configFile: false,
-    root: __dirname,
+    //@ts-ignore
+    root: './',
     server: {
       port: FRONT_PORT
     }
@@ -194,16 +206,12 @@ const { createServer } = require('vite');
 })();
 
 
-const express = require('express');
-const cors = require('cors');
-
-
-const resRef = {};
+const resRef: any = {};
 
 async function runSSE() {
   const app = express();
   app.use(cors());
-  app.get('/events', async function (req, res) {
+  app.get('/events', async function (_, res) {
     resRef.current = res;
     res.set({
       'Cache-Control': 'no-cache',
@@ -219,7 +227,7 @@ async function runSSE() {
     chokidar.watch(SAVES_URL).on('change', fileHandler(resRef));
   });
 
-  app.get('/', (req, res) => res.json({ run, events }));
+  app.get('/', (_, res) => res.json({ run, events }));
   app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));
 };
 

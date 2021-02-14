@@ -26,9 +26,12 @@ const fillSegments = (segments: Segment[]) => {
   // Adding the final “roadblock”/“camp” item
   if ((lastSubSegment || isReef) && lastSubSegment !== finalSubSegment) {
     resultSegments[resultSegments.length - 1].subSegments.push({
-      name: finalSubSegment,
+      name: isReef ? 'Beach' : finalSubSegment,
       subSegments: []
     })
+  } else if (isReef && lastSubSegment === 'Camp') {
+    // Ooof, awkwrd, need to find a better way to do this lol
+    resultSegments[resultSegments.length - 1].subSegments[resultSegments[resultSegments.length - 1].subSegments.length - 1].name = 'Beach';
   }
 
   // We discard the potential East Coast IL here for now.
