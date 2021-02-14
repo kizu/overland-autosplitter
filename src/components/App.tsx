@@ -30,6 +30,8 @@ function App() {
 
   const [expandedSegment, setExpandedSegment] = React.useState<number>();
 
+  const [hasSettings, setHasSettings] = React.useState(false);
+
   return styled(styles)(
     <div {...use({ Root: true })}>
       <main>
@@ -49,7 +51,7 @@ function App() {
                 const isExpanded = expandedSegment === undefined ? !end : expandedSegment === index;
                 const hasOnlyRoadblock = subSegments.length === 1 && subSegments[0].name === 'Roadblock';
                 const subItems = !(!isExpanded && !isIL) && subSegments.length > 0 && !hasOnlyRoadblock ? subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
-                  <li key={subIndex} {...use({isDisabled: !subStart }) }>
+                  <li key={subIndex} {...use({ isDisabled: !subStart, isFinished: !!subEnd }) }>
                     <span>{subName}</span>
                     {subStart ? <Timer from={subStart} finalTimeStamp={subEnd || finalTimeStamp} /> : <span>-</span> }
                   </li>
@@ -62,7 +64,7 @@ function App() {
                 } : {};
 
                 return isIL ? index === 0 ? subItems : null : (
-                  <li key={index} {...use({ isDisabled: !start })}>
+                  <li key={index} {...use({ isDisabled: !start, isFinished: !!end })}>
                     <NameAs
                       {...nameProps}
                     >{name} {end && !isExpanded ? <StopsIcon>{subSegments.length}</StopsIcon> : null}</NameAs>
@@ -83,8 +85,9 @@ function App() {
           </React.Fragment>
         : <p>Waiting for the run to start…</p>
       }
+        <button type="button" onClick={() => setHasSettings(!hasSettings)}>⚙️</button>
       </main>
-      <aside>
+      {hasSettings ? <aside>
         {
           runStats ? <p>
             <button onClick={() => setfinalTimeStamp(prev => prev || !runStats ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
@@ -100,7 +103,7 @@ function App() {
           <p>
             {eventsCount} events
             <input
-              value={limit}
+              value={limit ?? ''}
               type="number"
               onChange={
                 ({ target: { value } }) => {
@@ -113,7 +116,7 @@ function App() {
           </p>
           <p>Game build {buildNumber}</p>
         </footer>
-      </aside>
+      </aside> : null}
     </div>
   )}
 

@@ -59,7 +59,7 @@ const log = (...args) => debugLog.push(args);
 
 const fileHandler = resRef => path => {
   const res = resRef.current;
-  const currentTime = Date.now();
+  const currentTime = new Date(Date.now()).toISOString();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.')) {
     log('skipping this file');
@@ -114,7 +114,7 @@ const fileHandler = resRef => path => {
       type = 'subSegment start';
     }
 
-    if (turn === 1 && prevEvent.turn !== 1) {
+    if (turn === 1 && prevEvent.turn !== 1 && type !== 'start') {
       type = 'first turn';
     }
 
@@ -141,22 +141,13 @@ const fileHandler = resRef => path => {
     // basically, when debugging, the unknown is ok to have, otherwise only push non-unknowns, and only save to file in the same condition.
 
     // Just pushing every event, so we could easily compare with previous ones
-    const timeFromStart = timestamp - run.startDate;
     const timeFromLast = timestamp - (prevEvent.timestamp || timestamp);
-    const shouldSkip = prevEvent.timestamp && !timeFromLast;
+    const shouldSkip = prevEvent.timestamp && !timeFromLast || filename === 'default.records';
     if (!shouldSkip) {
       events.push({
-        filename, // for debugging only
         type, // detected type of the event
         timestamp, // Always needed
-        // these two are not needed in the log, useful for debugging
-        timeFromLast,
-        timeFromStart,
-        scene, // 0 === level, 1 === map
-        distanceDriven, // 0 when starging, changing after level
-        distanceIndex, // Do we need this?
         biomeName, // can be helpful
-        dayChunks, // time of day?
         iconPath, // location
         turn // changes between turns, 0 at the level init
       })

@@ -2,9 +2,14 @@ import { css } from '@reshadow/react';
 
 export const styles = css`
   :global(html) {
-    --color-main: #FAF7E5;
-    --color-bg: #0C1B1E;
-    --misc-color: rgba(255,255,255,0.75);
+    --color-light: #FAF7E5;
+    --color-dark: #0C1B1E;
+    --color-gold: #F79D34;
+    --color-red: #F46044;
+    --color-green: #8EB884;
+
+    --alpha-disabled: 0.35;
+    --alpha-inactive: 0.5;
 
     --font-large: 50px;
     --font-regular: 18px;
@@ -22,8 +27,8 @@ export const styles = css`
     text-transform: uppercase;
     letter-spacing: 0.2px;
 
-    color: var(--color-main);
-    background: var(--color-bg); /* Consider transparent, for the browsersource? */
+    color: var(--color-light);
+    background: var(--color-dark); /* Consider transparent, for the browsersource? */
   }
 
   :global(html, body) {
@@ -38,23 +43,38 @@ export const styles = css`
   }
 
   main {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     width: 240px;
     height: 505px;
+    box-sizing: content-box;
     max-height: calc(100vh - 20px);
-    margin: 10px;
+    padding: 10px;
 
     font-size: var(--font-regular);
 
     overflow: hidden;
     resize: both;
 
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+    }
+
     /* To hide the resizer unless hovered */
     &:not(:hover):not(:active) {
       visibility: hidden;
     }
-    & > * {
+
+    & > *,
+    &::before {
       visibility: visible;
     }
   }
@@ -65,6 +85,13 @@ export const styles = css`
     flex-shrink: 1;
     justify-content: flex-end;
     overflow: hidden;
+  }
+
+  main > button {
+    position: absolute;
+    padding: 10px;
+    bottom: 0;
+    left: 0;
   }
 
   h2 {
@@ -105,7 +132,11 @@ export const styles = css`
     }
 
     &[|isDisabled] {
-      opacity: 0.35;
+      opacity: var(--alpha-disabled);
+    }
+
+    &[|isFinished] > *:not(ol) {
+      opacity: var(--alpha-inactive);
     }
 
     & & {
@@ -136,11 +167,16 @@ export const styles = css`
   }
 
   aside {
+    padding: 10px;
     margin-top: auto;
   }
 
   button {
     all: unset;
     cursor: pointer;
+
+    &:hover {
+      opacity: 1 !important;
+    }
   }
 `;

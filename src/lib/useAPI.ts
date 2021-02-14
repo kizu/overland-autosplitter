@@ -11,8 +11,20 @@ const fillSegments = (segments: Segment[]) => {
   const lastSegment = segments[segments.length - 1];
   const subSegments = lastSegment?.subSegments || [];
   const lastSubSegment = subSegments[subSegments.length - 1]?.name;
-  const finalSubSegment = lastSegment.name === 'Reef' ? 'Camp' : 'Roadblock';
-  if (lastSubSegment && lastSubSegment !== finalSubSegment) {
+  const isReef = lastSegment?.name === 'Reef';
+  const finalSubSegment = isReef ? 'Camp' : 'Roadblock';
+  // Adding all the reefs to the Reef.
+  if (isReef && subSegments.length < 5) {
+    const extraReefs = 5 - subSegments.length;
+    for (let index = 0; index < extraReefs; index++) {
+      resultSegments[resultSegments.length - 1].subSegments.push({
+        name: 'Reef',
+        subSegments: []
+      })
+    }
+  }
+  // Adding the final “roadblock”/“camp” item
+  if ((lastSubSegment || isReef) && lastSubSegment !== finalSubSegment) {
     resultSegments[resultSegments.length - 1].subSegments.push({
       name: finalSubSegment,
       subSegments: []
@@ -55,12 +67,7 @@ export const useAPI = (limit?: number) => {
     if (!isLoading) {
       setEventsCount(allEvents.length)
       const newSegments: Segment[] = [];
-      events.forEach(({ filename, type, biomeName, timestamp, iconPath }: Event) => {
-        // Move to the events population logic
-        if (filename === 'default.records') {
-          return;
-        }
-
+      events.forEach(({ type, biomeName, timestamp, iconPath }: Event) => {
         if (type === 'start' || type === 'biome transition') {
           const lastSegment = newSegments[newSegments.length - 1];
           if (type === 'biome transition') {

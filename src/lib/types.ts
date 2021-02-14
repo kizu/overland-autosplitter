@@ -23,7 +23,6 @@ export interface RunStats {
 export type EventType = 'unknown' | 'start' | 'first turn' | 'new turn' | 'map arrival' | 'biome transition' | 'subSegment start' | 'end';
 
 export interface Event {
-  filename: string;
   type: EventType;
   timestamp: number;
   biomeName: BiomeKey;
@@ -31,7 +30,7 @@ export interface Event {
   turn: number;
 }
 
-export type SubSegmentName = 'Roadblock' | 'Survivor' | 'Vehicle' | 'Fuel' | 'GasStation' | 'Camp';
+export type SubSegmentName = 'Roadblock' | 'Survivor' | 'Vehicle' | 'Fuel' | 'GasStation' | 'Camp' | 'Reef';
 
 export interface Segment<T = BiomeName> {
   name: T;

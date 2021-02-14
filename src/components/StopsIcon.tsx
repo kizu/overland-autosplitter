@@ -18,7 +18,7 @@ const styles = css`
     line-height: 1;
     font-size: 12px;
     border-radius: 50%;
-    color: var(--color-bg);
+    color: var(--color-dark);
 
     &::before {
       content: "";
@@ -29,7 +29,7 @@ const styles = css`
       right: -1px;
       bottom: -1px;
       border-radius: 50% 50% 50% 0;
-      background: var(--color-main);
+      background: var(--color-light);
       transform: rotate(-45deg);
 
       &[children=2] {

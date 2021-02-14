@@ -33,7 +33,7 @@ const styles = css`
 export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) => {
   const [now, setNow] = React.useState(Date.now);
   useAnimationFrame(finalTimeStamp ? null : 16, () => setNow(() => performance.timing.navigationStart + Math.floor(performance.now())));
-
+  const isRunning = !finalTimeStamp;
   const diff = (finalTimeStamp || now) - from;
 
   const hours = Math.floor(diff / oneHour);
@@ -49,10 +49,10 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
   const dateTime = `${hours}:${mm}:${ss}.${ms}`;
 
   return styled(styles)(
-    <time {...use({ isLarge })} dateTime={dateTime}>
+    <time {...use({ isLarge })} dateTime={dateTime} title={isRunning ? '' : dateTime }>
       {hours ? `${hours}:` : null}
-      {minutes ? `${mm}:` : null }
+      {minutes || !isRunning ? `${mm}:` : null }
       {ss}
-      {isLarge ? <small>.{ms}</small> : `.${ms.substring(0, 1)}`}
+      {isLarge ? <small>.{ms}</small> : isRunning ? `.${ms.substring(0, 1)}` : ''}
     </time>);
 });
