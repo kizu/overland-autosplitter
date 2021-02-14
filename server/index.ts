@@ -5,19 +5,15 @@ import * as chokidar from 'chokidar';
 import * as xml2js from 'xml2js';
 import * as JSPath from 'jspath';
 import { default as ticksToDate } from 'ticks-to-date';
-// @ts-ignore
 import { createServer } from 'vite';
-
-import { RunStats } from '../src/lib/types';
-
 import express from 'express';
 import cors from 'cors';
 
+import { RunStats } from '../src/lib/types';
+
 // For now these live here, later could be moved to a config file.
-const FRONT_PORT = 3000;
-const API_PORT = 3002;
-const SAVES_URL = '/Users/kizu/Library/Application Support/Finji/Overland/gameSaves';
-const LOGS_URL = '/Users/kizu/projects/overland-tracker-ui/logs';
+import config from '../tracker-config.json';
+const { FRONT_PORT, API_PORT, SAVES_URL, LOGS_URL } = config;
 
 // Running the API server and a watcher itself that would look at the overland save files.
 

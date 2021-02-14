@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "prestart": "tsc -p ./server/tsconfig.json",
-    "start": "node ./server/index.js",
+    "start": "node --experimental-json-modules ./server/index.js",
     "dev": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview"
