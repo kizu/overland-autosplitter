@@ -1,0 +1,6 @@
+{
+  "FRONT_PORT": 3000,
+  "API_PORT": 3002,
+  "SAVES_URL": "/Users/kizu/Library/Application Support/Finji/Overland/gameSaves",
+  "LOGS_URL": "/Users/kizu/projects/overland-tracker-ui/logs"
+}

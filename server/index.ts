@@ -1,9 +1,9 @@
 // I'm not a server person, so sorry for the mess here lol.
 
-import * as fs from 'fs';
-import * as chokidar from 'chokidar';
-import * as xml2js from 'xml2js';
-import * as JSPath from 'jspath';
+import fs from 'fs';
+import chokidar from 'chokidar';
+import xml2js from 'xml2js';
+import JSPath from 'jspath';
 import { default as ticksToDate } from 'ticks-to-date';
 import { createServer } from 'vite';
 import express from 'express';

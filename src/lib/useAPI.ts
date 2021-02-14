@@ -70,6 +70,7 @@ export const useAPI = (limit?: number) => {
     if (!isLoading) {
       setEventsCount(allEvents.length)
       const newSegments: Segment[] = [];
+      let hasEnded = false;
       events.forEach(({ type, biomeName, timestamp, iconPath }: Event) => {
         if (type === 'start' || type === 'biome transition') {
           const lastSegment = newSegments[newSegments.length - 1];
@@ -99,7 +100,8 @@ export const useAPI = (limit?: number) => {
             }
           );
         }
-        if (type === 'end') {
+        if (type === 'end' && !hasEnded) {
+          hasEnded = true;
           const lastSegment = newSegments[newSegments.length - 1];
           lastSegment.end = timestamp;
           lastSegment.subSegments[lastSegment.subSegments.length - 1].end = timestamp;

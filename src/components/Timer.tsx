@@ -47,9 +47,10 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
   const ms = `${milliseconds}`.padStart(3, '0');
 
   const dateTime = `${hours}:${mm}:${ss}.${ms}`;
+  const humanReadable = finalTimeStamp ? `${dateTime}, ${new Date(from).toISOString()} — ${new Date(finalTimeStamp).toISOString()}` : '';
 
   return styled(styles)(
-    <time {...use({ isLarge })} dateTime={dateTime} title={isRunning ? '' : dateTime }>
+    <time {...use({ isLarge })} dateTime={dateTime} title={isRunning ? '' : humanReadable }>
       {hours ? `${hours}:` : null}
       {minutes || !isRunning ? `${mm}:` : null }
       {ss}

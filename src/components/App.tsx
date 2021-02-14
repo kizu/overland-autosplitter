@@ -32,6 +32,12 @@ function App() {
 
   const [hasSettings, setHasSettings] = React.useState(false);
 
+  const [hasAbsoluteTime, setHasAbsoluteTime] = React.useState(false);
+  const [startOffset, setStartOffset] = React.useState(0);
+  const [endOffset, setEndOffset] = React.useState(0);
+
+  let absTime = startOffset;
+
   return styled(styles)(
     <div {...use({ Root: true })}>
       <main>
@@ -57,6 +63,9 @@ function App() {
                   </li>
                 )) : null;
 
+                const prevAbsTime = absTime;
+                absTime = absTime + (end || finalTimeStamp || 0) - (start || 0);
+
                 const NameAs = end ? 'button' : 'span';
                 const nameProps = end ? {
                   type: 'button' as const,
@@ -68,7 +77,7 @@ function App() {
                     <NameAs
                       {...nameProps}
                     >{name} {end && !isExpanded ? <StopsIcon>{subSegments.length}</StopsIcon> : null}</NameAs>
-                    {start ? <Timer from={start} finalTimeStamp={end || finalTimeStamp} /> : <span>-</span>}
+                    {start ? <Timer from={start - (hasAbsoluteTime ? prevAbsTime : startOffset)} finalTimeStamp={end || finalTimeStamp} /> : <span>-</span>}
                     {subItems ? <ol>{subItems}</ol> : null}
                   </li>
                 );
@@ -78,8 +87,8 @@ function App() {
           </ol>
           <output>
             {isIL
-              ? <Timer isLarge from={runStats.startDate} finalTimeStamp={segments[0]?.end || finalTimeStamp} />
-              : <Timer isLarge from={runStats.startDate} finalTimeStamp={finalTimeStamp} />
+              ? <Timer isLarge from={runStats.startDate - startOffset} finalTimeStamp={(segments[0]?.end || finalTimeStamp || 0) + endOffset} />
+              : <Timer isLarge from={runStats.startDate - startOffset} finalTimeStamp={(finalTimeStamp || 0) + endOffset} />
             }
           </output>
           </React.Fragment>
@@ -111,6 +120,27 @@ function App() {
                   const isValid = !isNaN(result) && result >= 0
                   setLimit(isValid ? result : undefined);
                 }
+              }
+            />
+          </p>
+          <p><label><input type="checkbox" checked={hasAbsoluteTime} onChange={() => setHasAbsoluteTime(!hasAbsoluteTime)} /> has absolute time</label></p>
+          <p>
+            start offset (in ms)
+            <input
+              value={startOffset}
+              type="number"
+              onChange={
+                ({ target: { value } }) => setStartOffset(parseInt(value, 10))
+              }
+            />
+          </p>
+          <p>
+            end offset (in ms)
+            <input
+              value={endOffset}
+              type="number"
+              onChange={
+                ({ target: { value } }) => setEndOffset(parseInt(value, 10))
               }
             />
           </p>
