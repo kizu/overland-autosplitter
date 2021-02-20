@@ -6,7 +6,7 @@ import express from 'express';
 import cors from 'cors';
 
 import { FRONT_PORT, API_PORT, SAVES_URL } from '../tracker-config.json';
-import { runData } from './lib/getRunData';
+import { getInitialRunData } from './lib/getRunData';
 import { fileHandler } from './lib/fileHandler';
 
 // Running the vite server to serve the frontend stuff.
@@ -28,9 +28,10 @@ import { fileHandler } from './lib/fileHandler';
 const resRef: any = {};
 
 async function runSSE() {
+  const runData = getInitialRunData();
   const app = express();
   app.use(cors());
-  app.get('/events', async function (_, res) {
+  app.get('/', async function (_, res) {
     resRef.current = res;
     res.set({
       'Cache-Control': 'no-cache',
@@ -46,7 +47,6 @@ async function runSSE() {
     chokidar.watch(SAVES_URL).on('change', fileHandler(resRef));
   });
 
-  app.get('/', (_, res) => res.json(runData));
   app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));
 };
 
