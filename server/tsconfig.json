@@ -1,5 +1,5 @@
 {
-  "include": ["./index.ts"],
+  "files": ["./index.ts"],
   "compilerOptions": {
     "lib": [
       "es6",
@@ -7,14 +7,16 @@
     ],
     "noImplicitAny": true,
     "allowJs": true,
-    "target": "es5",
+    "esModuleInterop": true,
+    "target": "es6",
     "strict": true,
-    "module": "es6",
+    "module": "commonjs",
     "isolatedModules": true,
     "moduleResolution": "node",
     "sourceMap": false,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "outDir": "dist",
   }
 }

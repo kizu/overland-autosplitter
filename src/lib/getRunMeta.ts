@@ -1,7 +1,7 @@
 import { BIOME_NAME_MAP } from './constants';
-import type { RunStats } from './types';
+import type { RunData } from './types';
 
-export const getRunMeta = ({ buildNumber, settings, biomeName }: RunStats | undefined = {} as RunStats, isForcedIL: boolean) => {
+export const getRunMeta = ({ buildNumber, settings, biomeName }: RunData | undefined = {} as RunData, isForcedIL: boolean) => {
   if (!settings) {
     return {};
   }

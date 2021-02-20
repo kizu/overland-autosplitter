@@ -13,3 +13,7 @@ type ValueOf<T> = T[keyof T];
 
 export type BiomeKey = keyof typeof BIOME_NAME_MAP;
 export type BiomeName = ValueOf<typeof BIOME_NAME_MAP>;
+
+export const timeOfDayMap = ['dawn', 'afternoon', 'sunset', 'night'] as const;
+export type TimeOfDay = typeof timeOfDayMap[number];
+

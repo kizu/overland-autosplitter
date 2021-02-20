@@ -32,7 +32,7 @@ const styles = css`
 
 export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) => {
   const [now, setNow] = React.useState(Date.now);
-  useAnimationFrame(finalTimeStamp ? null : 16, () => setNow(() => performance.timing.navigationStart + Math.floor(performance.now())));
+  useAnimationFrame(finalTimeStamp ? null : 16, () => setNow(Date.now));
   const isRunning = !finalTimeStamp;
   const diff = (finalTimeStamp || now) - from;
 

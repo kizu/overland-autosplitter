@@ -13,11 +13,11 @@ import styled, { use } from '@reshadow/react'
 function App() {
   const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
   const [limit, setLimit] = React.useState<number>()
-  const { runStats, eventsCount, segments } = useAPI(limit);
+  const { runData, eventsCount, segments } = useAPI(limit);
 
   const runIsEnded = segments.length && segments[segments.length - 1].end;
   React.useEffect(() => {
-    if (runIsEnded && runStats?.startDate) {
+    if (runIsEnded && runData?.startDate) {
       setfinalTimeStamp(runIsEnded);
     } else if (finalTimeStamp) {
       setfinalTimeStamp(undefined);
@@ -26,7 +26,7 @@ function App() {
 
   const [isForcedIL, setIsForcedIL] = React.useState(false);
 
-  const { canBeIL, buildNumber, isIL, category, isAllDogs } = getRunMeta(runStats, isForcedIL);
+  const { canBeIL, buildNumber, isIL, category, isAllDogs } = getRunMeta(runData, isForcedIL);
 
   const [expandedSegment, setExpandedSegment] = React.useState<number>();
 
@@ -41,7 +41,7 @@ function App() {
   return styled(styles)(
     <div {...use({ Root: true })}>
       <main>
-      {runStats && runStats.startDate
+      {runData && runData.startDate
         ? <React.Fragment>
           <Logo />
           <h2>
@@ -54,10 +54,11 @@ function App() {
           <ol>
             {
               segments.map(({ name, start, end, subSegments }, index) => {
-                const isExpanded = expandedSegment === undefined ? !end : expandedSegment === index;
+                const shouldCollapse = end && !(!segments[index + 1]?.end && segments[index + 1]?.subSegments?.length <= 1 || index === segments.length - 1);
+                const isExpanded = expandedSegment === undefined ? !shouldCollapse : expandedSegment === index;
                 const hasOnlyRoadblock = subSegments.length === 1 && subSegments[0].name === 'Roadblock';
-                const subItems = !(!isExpanded && !isIL) && subSegments.length > 0 && !hasOnlyRoadblock ? subSegments.map(({ name: subName, start: subStart, end: subEnd }, subIndex) => (
-                  <li key={subIndex} {...use({ isDisabled: !subStart, isFinished: !!subEnd }) }>
+                const subItems = !(!isExpanded && !isIL) && subSegments.length > 0 && !hasOnlyRoadblock ? subSegments.map(({ name: subName, start: subStart, end: subEnd, isNight }, subIndex) => (
+                  <li key={subIndex} {...use({ isDisabled: !subStart, isFinished: !!subEnd, isNight }) }>
                     <span>{subName}</span>
                     {subStart ? <Timer from={subStart} finalTimeStamp={subEnd || finalTimeStamp} /> : <span>-</span> }
                   </li>
@@ -65,9 +66,9 @@ function App() {
 
                 const prevAbsTime = absTime;
                 absTime = absTime + (end || finalTimeStamp || 0) - (start || 0);
-
-                const NameAs = end ? 'button' : 'span';
-                const nameProps = end ? {
+                const isButton = end && !(expandedSegment === undefined && !shouldCollapse);
+                const NameAs = isButton ? 'button' : 'span';
+                const nameProps = isButton ? {
                   type: 'button' as const,
                   onClick: () => setExpandedSegment(prev => prev === index ? undefined : index)
                 } : {};
@@ -87,8 +88,8 @@ function App() {
           </ol>
           <output>
             {isIL
-              ? <Timer isLarge from={runStats.startDate - startOffset} finalTimeStamp={(segments[0]?.end || finalTimeStamp || 0) + endOffset} />
-              : <Timer isLarge from={runStats.startDate - startOffset} finalTimeStamp={(finalTimeStamp || 0) + endOffset} />
+              ? <Timer isLarge from={runData.startDate - startOffset} finalTimeStamp={(segments[0]?.end || finalTimeStamp || 0) + endOffset} />
+              : <Timer isLarge from={runData.startDate - startOffset} finalTimeStamp={(finalTimeStamp || 0) + endOffset} />
             }
           </output>
           </React.Fragment>
@@ -98,10 +99,10 @@ function App() {
       </main>
       {hasSettings ? <aside>
         {
-          runStats ? <p>
-            <button onClick={() => setfinalTimeStamp(prev => prev || !runStats ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
+          runData ? <p>
+            <button onClick={() => setfinalTimeStamp(prev => prev || !runData ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
             {/* <button onClick={() => {
-              setRunStats(undefined);
+              setRunData(undefined);
               setfinalTimeStamp(undefined);
             }}>Reset the run</button> */}
 

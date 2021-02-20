@@ -1,6 +1,6 @@
 import React from 'react'
 import { useSSE } from 'react-hooks-sse';
-import type { RunStats, Segment, Event, SubSegmentName } from './types';
+import type { RunData, Segment, EventData, SubSegmentName } from './types';
 import { BIOME_NAME_MAP } from './constants';
 
 const biomeNames = Object.values(BIOME_NAME_MAP);
@@ -12,7 +12,8 @@ const fillSegments = (segments: Segment[]) => {
   const subSegments = lastSegment?.subSegments || [];
   const lastSubSegment = subSegments[subSegments.length - 1]?.name;
   const isReef = lastSegment?.name === 'Reef';
-  const finalSubSegment = isReef ? 'Camp' : 'Roadblock';
+  const isIntro = lastSegment?.name === 'Introduction';
+  const finalSubSegment = isReef ? 'Camp' : isIntro ? 'Survivor' : 'Roadblock';
   // Adding all the reefs to the Reef.
   if (isReef && subSegments.length < 5) {
     const extraReefs = 5 - subSegments.length;
@@ -52,8 +53,8 @@ const fillSegments = (segments: Segment[]) => {
 }
 
 export const useAPI = (limit?: number) => {
-  const { run, events: allEvents } = useSSE('message', {} as { run: RunStats, events: any[] });
-
+  const runData = useSSE<RunData | undefined>('message', undefined);
+  const { events: allEvents } = runData || { events: [] };
   const events = React.useMemo(
     () => limit === undefined ? allEvents : allEvents.slice(0, limit),
     [allEvents, limit]
@@ -62,8 +63,8 @@ export const useAPI = (limit?: number) => {
   const [segments, setSegments] = React.useState<Segment[]>([]);
   const [eventsCount, setEventsCount] = React.useState(0);
 
-
-  const isLoading = !run || !events;
+  const isLoading = !runData || !events;
+  const runStart = runData?.startDate;
 
   // Only update the segments when the new event appears
   React.useEffect(() => {
@@ -71,7 +72,16 @@ export const useAPI = (limit?: number) => {
       setEventsCount(allEvents.length)
       const newSegments: Segment[] = [];
       let hasEnded = false;
-      events.forEach(({ type, biomeName, timestamp, iconPath }: Event) => {
+      events.forEach(({ type, biomeName, timestamp, iconPath, timeOfDay, turn, fuel }) => {
+        // Here we can record the number of turns taken for the prev subsegment
+        if (type === 'map arrival' || type === 'biome transition') {
+          const lastSegment = newSegments[newSegments.length - 1];
+          if (lastSegment && lastSegment.subSegments.length) {
+            const lastSubSegment = lastSegment.subSegments[lastSegment.subSegments.length - 1];
+            lastSubSegment.turns = turn;
+            lastSubSegment.fuelEnd = fuel;
+          }
+        }
         if (type === 'start' || type === 'biome transition') {
           const lastSegment = newSegments[newSegments.length - 1];
           if (type === 'biome transition') {
@@ -87,18 +97,22 @@ export const useAPI = (limit?: number) => {
         }
         if (type === 'start' || type === 'subSegment start') {
           const lastSegment = newSegments[newSegments.length - 1];
-          const isFirstSubSegment = !lastSegment.subSegments.length;
+          const isFirstSubSegment = !lastSegment?.subSegments.length;
           if (!isFirstSubSegment) {
             lastSegment.subSegments[lastSegment.subSegments.length - 1].end = timestamp;
           }
-          lastSegment.subSegments.push(
-            {
-              name: iconPath.replace(/^Loc/, '') as SubSegmentName,
-              // First subSegment's start is the same as its parent
-              start: isFirstSubSegment ? lastSegment.start : timestamp,
-              subSegments: [] // potentially, turns / map transitions?
-            }
-          );
+          if (lastSegment) {
+            lastSegment.subSegments.push(
+              {
+                name: iconPath.replace(/^Loc/, '') as SubSegmentName,
+                // First subSegment's start is the same as its parent
+                start: isFirstSubSegment ? lastSegment.start : timestamp,
+                isNight: timeOfDay === 'night',
+                fuelStart: fuel,
+                subSegments: [] // potentially, turns / map transitions?
+              }
+            );
+          }
         }
         if (type === 'end' && !hasEnded) {
           hasEnded = true;
@@ -109,7 +123,8 @@ export const useAPI = (limit?: number) => {
       });
       setSegments(fillSegments(newSegments));
     }
-  }, [isLoading, events?.length]);
-
-  return { runStats: run, segments, eventsCount };
+    // We need to depend on runStart here, in order to properly recalc runs
+    // with the same count of events and if the isLoading is not changed.
+  }, [runStart, isLoading, events?.length]);
+  return { runData, segments, eventsCount };
 };

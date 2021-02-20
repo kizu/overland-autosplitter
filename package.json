@@ -1,9 +1,10 @@
 {
   "name": "overland-tracker-ui",
   "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
     "prestart": "tsc -p ./server/tsconfig.json",
-    "start": "node --experimental-json-modules ./server/index.js",
+    "start": "node ./server/dist/server/index.js",
     "dev": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview"

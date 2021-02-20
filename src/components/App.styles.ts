@@ -144,6 +144,18 @@ export const styles = css`
       font-size: var(--font-small);
     }
 
+    &[|isNight] > span::after {
+      content: "";
+      display: inline-block;
+      vertical-align: middle;
+      font-size: 0.65em;
+      width: 1em;
+      height: 1.375em;
+      margin-top: -0.3em;
+      margin-left: 0.5em;
+      background: url(/moon.png) 0 0/contain no-repeat;
+    }
+
     /* Reshadow has a bug where we can't target a React.memo-wrapped elements */
     & > span + *,
     & > button + * {
