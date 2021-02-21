@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prestart": "tsc -p ./server/tsconfig.json",
-    "start": "node ./server/dist/server/index.js",
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "serve": "vite preview"
+    "prestart": "tsc -p ./app/server/tsconfig.json",
+    "start": "node ./app/server/dist/server/index.js",
+    "dev": "cd app && vite",
+    "build": "cd app && tsc && vite build",
+    "serve": "cd app && vite preview"
   },
   "dependencies": {
     "@reshadow/react": "^0.0.1-issue-119.0",
@@ -16,8 +16,12 @@
     "@types/jspath": "^0.4.0",
     "@types/node": "^14.14.27",
     "@types/xml2js": "^0.4.8",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
     "chokidar": "^3.5.1",
     "cors": "^2.8.5",
+    "electron": "^11.3.0",
+    "eslint": "^7.20.0",
     "express": "^4.17.1",
     "jspath": "^0.4.0",
     "react": "^17.0.0",

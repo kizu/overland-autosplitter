@@ -16,7 +16,7 @@ import { fileHandler } from './lib/fileHandler';
   const server = await createServer({
     configFile: false,
     //@ts-ignore
-    root: './',
+    root: './app/',
     server: {
       port: FRONT_PORT
     }
