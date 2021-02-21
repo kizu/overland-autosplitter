@@ -1,14 +1,14 @@
 import fs from 'fs';
 import xml2js from 'xml2js';
+import { RunData } from '../../src/lib/types';
 
-import { LOGS_URL } from '../../tracker-config.json';
+import { LOGS_URL } from '../../tracker-config';
 
 import { log, writeDebugLog } from './debugLog';
 import { getRunData } from './getRunData';
 import { getSaveData } from './getSaveData';
 
-export const fileHandler = (resRef: any) => (path: string) => {
-  const res = resRef.current;
+export const fileHandler = (handleData: (data: RunData) => void) => (path: string) => {
   const currentTime = new Date(Date.now()).toISOString();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.') || path.includes('default.records')) {
@@ -29,7 +29,7 @@ export const fileHandler = (resRef: any) => (path: string) => {
     if (runData) {
       log('Pushed to client at', new Date(Date.now()).toISOString());
       // Emit an SSE that contains the current 'count' as a string
-      res.write(`data: ${JSON.stringify(runData)}\n\n`);
+      handleData(runData);
 
       fs.writeFile(
         `${LOGS_URL}/${runData.startDate}.json`,

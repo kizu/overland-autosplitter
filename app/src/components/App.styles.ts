@@ -47,16 +47,27 @@ export const styles = css`
     z-index: 1;
     display: flex;
     flex-direction: column;
-    width: 240px;
-    height: 505px;
+    width: 260px;
+    height: 525px;
     box-sizing: content-box;
-    max-height: calc(100vh - 20px);
-    padding: 10px;
+    max-height: 100vh;
+    padding: 0;
 
     font-size: var(--font-regular);
 
     overflow: hidden;
     resize: both;
+
+    &[|isElectron] {
+      width: 100vw;
+      height: 100vh;
+      resize: none;
+    }
+
+    &:global([class]) > * {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
 
     &::before {
       content: "";
@@ -69,7 +80,7 @@ export const styles = css`
     }
 
     /* To hide the resizer unless hovered */
-    &:not(:hover):not(:active) {
+    &:not(:hover):not(:active):not([|isElectron]) {
       visibility: hidden;
     }
 
@@ -153,7 +164,7 @@ export const styles = css`
       height: 1.375em;
       margin-top: -0.3em;
       margin-left: 0.5em;
-      background: url(/moon.png) 0 0/contain no-repeat;
+      background: url(../moon.png) 0 0/contain no-repeat;
     }
 
     /* Reshadow has a bug where we can't target a React.memo-wrapped elements */

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { LOGS_URL } from '../../tracker-config.json';
+import { LOGS_URL } from '../../tracker-config';
 
 const debugLog: any[] = [];
 export const log = (...args: any[]) => debugLog.push(args);

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSSE } from 'react-hooks-sse';
-import type { RunData, Segment, EventData, SubSegmentName } from './types';
-import { BIOME_NAME_MAP } from './constants';
+import type { RunData, Segment, SubSegmentName } from './types';
+import { isElectron, BIOME_NAME_MAP } from './constants';
 
 const biomeNames = Object.values(BIOME_NAME_MAP);
 
@@ -52,8 +52,32 @@ const fillSegments = (segments: Segment[]) => {
   return resultSegments;
 }
 
-export const useAPI = (limit?: number) => {
+const pingServer = new Event('pingServer');
+
+const useSSEdata = () => {
   const runData = useSSE<RunData | undefined>('message', undefined);
+  return runData;
+}
+
+const useElectronData = () => {
+  const [runData, setRunData] = React.useState<RunData>();
+  React.useEffect(() => {
+    window.addEventListener(
+      'sendRunData',
+      (e: any) => {
+        setRunData({ ...e.detail })
+      },
+      false
+    );
+    window.dispatchEvent(pingServer);
+  }, []);
+  return runData;
+}
+
+const useSSEorElectron = isElectron() ? useElectronData : useSSEdata;
+
+export const useAPI = (limit?: number) => {
+  const runData = useSSEorElectron();
   const { events: allEvents } = runData || { events: [] };
   const events = React.useMemo(
     () => limit === undefined ? allEvents : allEvents.slice(0, limit),

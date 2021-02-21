@@ -1,6 +1,6 @@
 
 import fs from 'fs';
-import { LOGS_URL, DEBUG } from '../../tracker-config.json';
+import { LOGS_URL, DEBUG } from '../../tracker-config';
 import { log } from './debugLog';
 import type { EventData, SaveData, RunData } from '../../src/lib/types';
 

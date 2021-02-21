@@ -2,12 +2,13 @@
 
 import chokidar from 'chokidar';
 import { createServer } from 'vite';
-import express from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 
-import { FRONT_PORT, API_PORT, SAVES_URL } from '../tracker-config.json';
+import { FRONT_PORT, API_PORT, SAVES_URL } from '../tracker-config';
 import { getInitialRunData } from './lib/getRunData';
 import { fileHandler } from './lib/fileHandler';
+
 
 // Running the vite server to serve the frontend stuff.
 // Just the boilerplate from the docs:
@@ -15,7 +16,6 @@ import { fileHandler } from './lib/fileHandler';
 (async () => {
   const server = await createServer({
     configFile: false,
-    //@ts-ignore
     root: './app/',
     server: {
       port: FRONT_PORT
@@ -25,7 +25,7 @@ import { fileHandler } from './lib/fileHandler';
 })();
 
 
-const resRef: any = {};
+const resRef: { current?: Response } = {};
 
 async function runSSE() {
   const runData = getInitialRunData();
@@ -43,11 +43,12 @@ async function runSSE() {
     res.write('retry: 10000\n\n');
     res.write(`data: ${JSON.stringify(runData)}\n\n`);
 
-    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(resRef));
-    chokidar.watch(SAVES_URL).on('change', fileHandler(resRef));
+    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`)));
+    chokidar.watch(SAVES_URL).on('change', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`)));
   });
 
   app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));
-};
+}
 
 runSSE().catch(err => console.log(err));
+

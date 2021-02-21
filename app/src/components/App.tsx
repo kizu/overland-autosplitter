@@ -9,8 +9,10 @@ import { StopsIcon } from './StopsIcon';
 
 import { useAPI } from '../lib/useAPI';
 import styled, { use } from '@reshadow/react'
+import { isElectron } from '../lib/constants';
 
-function App() {
+
+const App: React.FunctionComponent = () => {
   const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
   const [limit, setLimit] = React.useState<number>()
   const { runData, eventsCount, segments } = useAPI(limit);
@@ -40,7 +42,7 @@ function App() {
 
   return styled(styles)(
     <div {...use({ Root: true })}>
-      <main>
+      <main {...use({ isElectron })}>
       {runData && runData.startDate
         ? <React.Fragment>
           <Logo />
@@ -106,7 +108,7 @@ function App() {
               setfinalTimeStamp(undefined);
             }}>Reset the run</button> */}
 
-            {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
+            {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
           </p> : null
         }
         <footer>

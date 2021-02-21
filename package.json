@@ -1,13 +1,20 @@
 {
   "name": "overland-tracker-ui",
+  "main": "dist/src/main.js",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prestart": "tsc -p ./app/server/tsconfig.json",
-    "start": "node ./app/server/dist/server/index.js",
-    "dev": "cd app && vite",
-    "build": "cd app && tsc && vite build",
-    "serve": "cd app && vite preview"
+    "build:app:vite": "cd app && tsc && vite build",
+    "build:app": "tsc -p ./app/server/tsconfig.json",
+    "start:app": "yarn build:app && node ./app/server/dist/server/index.js",
+    "build": "yarn build:app:vite && tsc",
+    "watch": "tsc -w",
+    "lint": "eslint -c .eslintrc --ext .ts ./src",
+    "start": "yarn build && electron .",
+    "package": "yarn package:mac && yarn package:win && package:linux",
+    "package:mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --out=out --icon=assets/app-icon/mac/app.icns --osx-sign.identity='Developer ID Application: GitHub' --extend-info=assets/mac/info.plist",
+    "package:win": "electron-packager . --overwrite --platform=win32 --arch=ia32 --out=out --icon=assets/app-icon/win/app.ico",
+    "package:linux": "electron-packager . --overwrite --platform=linux --arch=x64 --out=out"
   },
   "dependencies": {
     "@reshadow/react": "^0.0.1-issue-119.0",
@@ -21,6 +28,7 @@
     "chokidar": "^3.5.1",
     "cors": "^2.8.5",
     "electron": "^11.3.0",
+    "electron-packager": "^15.2.0",
     "eslint": "^7.20.0",
     "express": "^4.17.1",
     "jspath": "^0.4.0",
@@ -28,9 +36,7 @@
     "react-dom": "^17.0.0",
     "react-hooks-sse": "^2.0.0",
     "ticks-to-date": "^1.0.3",
-    "xml2js": "^0.4.23"
-  },
-  "devDependencies": {
+    "xml2js": "^0.4.23",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@vitejs/plugin-react-refresh": "^1.1.0",

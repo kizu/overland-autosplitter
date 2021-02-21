@@ -1,3 +1,5 @@
+export const isElectron = (): boolean => navigator.userAgent.toLowerCase().indexOf(' electron/') > -1;
+
 export const BIOME_NAME_MAP = {
   introduction: 'Introduction',
   city: 'East Coast',
