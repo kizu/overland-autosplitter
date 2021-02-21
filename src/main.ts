@@ -12,11 +12,14 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
     },
     titleBarStyle: 'customButtonsOnHover',
-    frame: false
+    frame: false,
+    alwaysOnTop: true
   });
 
   // and load the index.html of the app.
-  const url = path.join(__dirname, "../../app/dist/index-secure.html");
+  const url = path.join(__dirname, "../../app/dist/index.html");
+  // FIXME: find out how to fix the eval() in the fileHandler
+  // const url = path.join(__dirname, "../../app/dist/index-secure.html");
   mainWindow.loadFile(url);
 
   // Quit when the window is closed
