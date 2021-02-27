@@ -1,14 +1,15 @@
 import React from 'react'
+import type { IpcRenderer } from "electron";
 import { isElectron as isElectronCallback } from './constants';
 const isElectron = isElectronCallback();
 
 declare global {
-  interface Window {
-    require: (name: string) => any;
-  }
-
   interface File {
     path: string;
+  }
+
+  interface Window {
+    ipcRenderer?: IpcRenderer;
   }
 }
 
@@ -18,21 +19,12 @@ declare module 'react' {
   }
 }
 
-let ipcRendererRef: Record<string, any> | undefined;
-
 const useIpcRenderer = () => {
-  React.useEffect(() => {
-    if (!isElectron || ipcRendererRef) {
-      return
-    }
-    // There is probably a better way to do this, but this works for now
-    ipcRendererRef = window.require('electron').ipcRenderer;
-  }, []);
-  return ipcRendererRef;
+  return isElectron ? window.ipcRenderer : undefined;
 }
 
 export const useElectronEvents = (events: Record<string, () => void>) => {
-  const ipcRenderer = useIpcRenderer();
+  const ipcRenderer = window.ipcRenderer;
   React.useEffect(() => {
     if (!ipcRenderer) {
       return
