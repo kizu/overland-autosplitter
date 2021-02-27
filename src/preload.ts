@@ -1,7 +1,7 @@
 import chokidar from 'chokidar';
+import { ipcRenderer } from "electron";
 import { getInitialRunData } from '../app/server/lib/getRunData';
 import { fileHandler } from '../app/server/lib/fileHandler';
-import { SAVES_URL } from '../app/tracker-config';
 import type { RunData } from '../app/src/lib/types';
 
 const runData = getInitialRunData();
@@ -11,12 +11,29 @@ const sendDataWithEvent = (data: RunData | undefined) => {
   window.dispatchEvent(event);
 }
 
+let currentUrl: string | undefined;
+let currentWatcher: chokidar.FSWatcher | undefined;
+
+const startWatcher = (url: string) => {
+  if (currentWatcher && currentUrl) {
+    currentWatcher.unwatch(currentUrl);
+  }
+  currentUrl = url;
+  currentWatcher = chokidar
+    .watch(currentUrl, { ignoreInitial: true })
+    .on('add', fileHandler(sendDataWithEvent))
+    .on('change', fileHandler(sendDataWithEvent));
+  console.log('watcher started on', currentUrl)
+}
+
 window.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener('pingServer', function () {
     sendDataWithEvent(runData);
   }, false);
 
-  chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(sendDataWithEvent));
-  chokidar.watch(SAVES_URL).on('change', fileHandler(sendDataWithEvent));
+  ipcRenderer.on('getSavesUrl', (e, savesUrl: string) => {
+    startWatcher(savesUrl);
+  });
+  ipcRenderer.send('getSavesUrlRequest');
 });

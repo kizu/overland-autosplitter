@@ -13,7 +13,8 @@ export const createWindow = () => {
     },
     titleBarStyle: 'customButtonsOnHover',
     frame: false,
-    alwaysOnTop: true
+    alwaysOnTop: true,
+    backgroundColor: '#0C1B1E'
   });
 
   // and load the index.html of the app.

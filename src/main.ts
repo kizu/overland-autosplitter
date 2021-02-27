@@ -9,12 +9,26 @@ app.on("ready", () => {
   attachGlobalShortcuts(mainWindow);
   createMenu(mainWindow);
 
+  let currentSavesUrl: string | undefined;
+  let currentSender: Electron.WebContents | undefined;
+  ipcMain.on('getSavesUrlRequest', (event) => {
+    settings.get().then(({ savesUrl }) => {
+      if (savesUrl !== currentSavesUrl) {
+        currentSender = event.sender;
+        currentSender.send('getSavesUrl', savesUrl)
+      }
+    })
+    mainWindow.webContents.send('getSettings', settings.getSync());
+  })
   ipcMain.on('getSettingsRequest', () => {
     mainWindow.webContents.send('getSettings', settings.getSync());
   })
   ipcMain.on('setSettings', (e, newSettings) => {
-    console.log('got from client:', newSettings)
     settings.set(newSettings);
+    const { savesUrl } = newSettings;
+    if (currentSender && savesUrl !== currentSavesUrl) {
+      currentSender.send('getSavesUrl', savesUrl);
+    }
   })
 });
 
