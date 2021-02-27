@@ -1,6 +1,3 @@
-// All of the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
-
 import chokidar from 'chokidar';
 import { getInitialRunData } from '../app/server/lib/getRunData';
 import { fileHandler } from '../app/server/lib/fileHandler';
@@ -15,6 +12,7 @@ const sendDataWithEvent = (data: RunData | undefined) => {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+
   window.addEventListener('pingServer', function () {
     sendDataWithEvent(runData);
   }, false);

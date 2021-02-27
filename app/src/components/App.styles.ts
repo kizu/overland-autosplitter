@@ -8,6 +8,8 @@ export const styles = css`
     --color-red: #F46044;
     --color-green: #8EB884;
 
+    --color-dark-overlay: rgb(12, 27, 30, 0.8);
+
     --alpha-disabled: 0.35;
     --alpha-inactive: 0.5;
 
@@ -80,7 +82,8 @@ export const styles = css`
     }
 
     /* To hide the resizer unless hovered */
-    &:not(:hover):not(:active):not([|isElectron]) {
+    &:not(:hover):not(:active):not([|isElectron]),
+    &:not(:hover) > button {
       visibility: hidden;
     }
 
@@ -190,8 +193,30 @@ export const styles = css`
   }
 
   aside {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 !important;
+    background: var(--color-dark-overlay);
+    z-index: 1;
     padding: 10px;
-    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    & > * {
+      margin: 0;
+    }
+
+    &:not([|hasSettings]) {
+      display: none;
+    }
+
+    & > button:global(:last-child) {
+      margin-top: auto;
+    }
   }
 
   button {

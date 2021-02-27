@@ -1,6 +1,7 @@
 /* @jsx styled.jsx */
 
 import React from 'react'
+import styled, { use } from '@reshadow/react'
 import { styles } from './App.styles';
 import { getRunMeta } from '../lib/getRunMeta';
 import { Timer } from './Timer';
@@ -8,9 +9,10 @@ import { Logo } from './Logo';
 import { StopsIcon } from './StopsIcon';
 
 import { useAPI } from '../lib/useAPI';
-import styled, { use } from '@reshadow/react'
-import { isElectron } from '../lib/constants';
+import { useElectronEvents, useElectronSettings } from '../lib/useElectronAPI';
+import { isElectron as isElectronCallback } from '../lib/constants';
 
+const isElectron = isElectronCallback();
 
 const App: React.FunctionComponent = () => {
   const [finalTimeStamp, setfinalTimeStamp] = React.useState<number>();
@@ -37,6 +39,15 @@ const App: React.FunctionComponent = () => {
   const [hasAbsoluteTime, setHasAbsoluteTime] = React.useState(false);
   const [startOffset, setStartOffset] = React.useState(0);
   const [endOffset, setEndOffset] = React.useState(0);
+
+  useElectronEvents({
+    'toggleOptions': () => {
+      setHasSettings(prev => !prev);
+    }
+  })
+
+  const [settings, setSettings] = useElectronSettings();
+  console.log('on render', { settings });
 
   let absTime = startOffset;
 
@@ -98,23 +109,37 @@ const App: React.FunctionComponent = () => {
         : <p>Waiting for the run to start…</p>
       }
         <button type="button" onClick={() => setHasSettings(!hasSettings)}>⚙️</button>
-      </main>
-      {hasSettings ? <aside>
-        {
-          runData ? <p>
-            <button onClick={() => setfinalTimeStamp(prev => prev || !runData ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
-            {/* <button onClick={() => {
+
+        <aside {...use({ hasSettings })}>
+          {
+            isElectron ? <p>
+              <input
+                type="file"
+                webkitdirectory="true"
+                onChange={({ target: { files } }) => {
+                  const filePath = (files ? files[0].path : '');
+                  if (filePath.includes('/gameSaves/')) {
+                    const path = filePath.replace(/\/gameSaves\/.+$/, '/gameSaves')
+                    setSettings({ savesUrl: path });
+                  }
+                }}
+              />
+            </p> : null
+          }
+          {
+            runData ? <p>
+              <button onClick={() => setfinalTimeStamp(prev => prev || !runData ? undefined : Date.now())}>{finalTimeStamp ? 'Resume timer' : 'Pause timer'}</button>
+              {/* <button onClick={() => {
               setRunData(undefined);
               setfinalTimeStamp(undefined);
             }}>Reset the run</button> */}
 
-            {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
-          </p> : null
-        }
-        <footer>
+              {canBeIL ? <label><input type="checkbox" checked={isForcedIL} onChange={() => setIsForcedIL(!isForcedIL)} /> IL?</label> : null}
+            </p> : null
+          }
           <p>
             {eventsCount} events
-            <input
+          <input
               value={limit ?? ''}
               type="number"
               onChange={
@@ -129,7 +154,7 @@ const App: React.FunctionComponent = () => {
           <p><label><input type="checkbox" checked={hasAbsoluteTime} onChange={() => setHasAbsoluteTime(!hasAbsoluteTime)} /> has absolute time</label></p>
           <p>
             start offset (in ms)
-            <input
+          <input
               value={startOffset}
               type="number"
               onChange={
@@ -139,7 +164,7 @@ const App: React.FunctionComponent = () => {
           </p>
           <p>
             end offset (in ms)
-            <input
+          <input
               value={endOffset}
               type="number"
               onChange={
@@ -148,8 +173,9 @@ const App: React.FunctionComponent = () => {
             />
           </p>
           <p>Game build {buildNumber}</p>
-        </footer>
-      </aside> : null}
+          <button type="button" onClick={() => setHasSettings(!hasSettings)}>Back</button>
+        </aside>
+      </main>
     </div>
   )}
 
