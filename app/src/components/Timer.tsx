@@ -34,14 +34,14 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
   const [now, setNow] = React.useState(Date.now);
   useAnimationFrame(finalTimeStamp ? null : 16, () => setNow(Date.now));
   const isRunning = !finalTimeStamp;
-  const diff = (finalTimeStamp || now) - from;
+  const diff = Math.max(0, (finalTimeStamp || now) - from);
 
   const hours = Math.floor(diff / oneHour);
   const minutes = Math.floor((diff - hours * oneHour) / oneMinute);
   const seconds = Math.floor((diff - hours * oneHour - minutes * oneMinute) / oneSecond);
   const milliseconds = diff - hours * oneHour - minutes * oneMinute - seconds * oneSecond;
   const mm = `${minutes}`.padStart(hours ? 2 : 1, '0');
-  const ss = `${seconds}`.padStart(minutes ? 2 : 1, '0');
+  const ss = `${seconds}`.padStart((hours || minutes || !isRunning) ? 2 : 1, '0');
   // If the time is final, do not round ms, otherwise it is better rounded,
   // so it would look better in the animation.
   const ms = `${milliseconds}`.padStart(3, '0');
@@ -52,7 +52,7 @@ export const Timer = React.memo(({ from, finalTimeStamp, isLarge }: TimerProps) 
   return styled(styles)(
     <time {...use({ isLarge })} dateTime={dateTime} title={isRunning ? '' : humanReadable }>
       {hours ? `${hours}:` : null}
-      {minutes || !isRunning ? `${mm}:` : null }
+      {hours || minutes || !isRunning ? `${mm}:` : null }
       {ss}
       {isLarge ? <small>.{ms}</small> : isRunning ? `.${ms.substring(0, 1)}` : ''}
     </time>);

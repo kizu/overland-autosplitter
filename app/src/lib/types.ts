@@ -15,9 +15,10 @@ export interface RunSettings {
 
 export interface RunData {
   startDate: number;
-  buildNumber: number;
-  biomeName: BiomeKey;
-  settings: RunSettings;
+  endDate?: number;
+  buildNumber?: number;
+  biomeName?: BiomeKey;
+  settings?: RunSettings;
   events: EventData[];
 }
 
@@ -64,4 +65,9 @@ export interface SaveData {
   biomeName: BiomeKey;
   filename: string;
   buildNumber: number;
+}
+
+export interface ElectronData {
+  savesUrl?: string;
+  runData?: RunData;
 }

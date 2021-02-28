@@ -4,11 +4,12 @@ import { RunData } from '../../src/lib/types';
 
 import { LOGS_URL } from '../../tracker-config';
 
-import { log, writeDebugLog } from './debugLog';
+import { log as debugLog, writeDebugLog } from './debugLog';
 import { getRunData } from './getRunData';
 import { getSaveData } from './getSaveData';
 
-export const fileHandler = (handleData: (data: RunData) => void) => (path: string) => {
+export const fileHandler = (handleData: (data: RunData) => void, isDebug?: boolean) => (path: string) => {
+  const log = isDebug ? debugLog : console.log;
   const currentTime = new Date(Date.now()).toISOString();
   log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.') || path.includes('default.records')) {
@@ -31,14 +32,18 @@ export const fileHandler = (handleData: (data: RunData) => void) => (path: strin
       // Emit an SSE that contains the current 'count' as a string
       handleData(runData);
 
-      fs.writeFile(
-        `${LOGS_URL}/${runData.startDate}.json`,
-        JSON.stringify(runData, null, 2),
-        err => { if (err) return console.log(err); }
-      );
+      if (isDebug) {
+        fs.writeFile(
+          `${LOGS_URL}/${runData.startDate}.json`,
+          JSON.stringify(runData, null, 2),
+          err => { if (err) return console.log(err); }
+        );
+      }
     }
 
-    writeDebugLog();
+    if (isDebug) {
+      writeDebugLog();
+    }
   });
 };
 

@@ -43,8 +43,8 @@ async function runSSE() {
     res.write('retry: 10000\n\n');
     res.write(`data: ${JSON.stringify(runData)}\n\n`);
 
-    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`)));
-    chokidar.watch(SAVES_URL).on('change', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`)));
+    chokidar.watch(SAVES_URL, { ignoreInitial: true }).on('add', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`), true));
+    chokidar.watch(SAVES_URL).on('change', fileHandler(data => resRef.current?.write(`data: ${JSON.stringify(data)}\n\n`), true));
   });
 
   app.listen(API_PORT, () => console.log(`Overland tracker API is at ${API_PORT}!`));

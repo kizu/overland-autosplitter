@@ -1,23 +1,10 @@
 
 import fs from 'fs';
-import { LOGS_URL, DEBUG } from '../../tracker-config';
-import { log } from './debugLog';
+import { LOGS_URL } from '../../tracker-config';
+import { log as debugLog } from './debugLog';
 import type { EventData, SaveData, RunData } from '../../src/lib/types';
 
 let runData: RunData | undefined;
-
-// Get the last run's info
-const pastRuns: string[] = [];
-fs.readdirSync(LOGS_URL).forEach((file: string) => {
-  if (file.match(/^\d+.json$/)) {
-    pastRuns.push(file);
-  }
-});
-
-if (pastRuns.length) {
-  const lastRun = JSON.parse(fs.readFileSync(`${LOGS_URL}/${pastRuns.sort()[pastRuns.length - 1]}`, 'utf8'));
-  runData = lastRun;
-}
 
 const initRun = (newRunData: Omit<RunData, 'events'>) => {
   runData = {
@@ -26,12 +13,30 @@ const initRun = (newRunData: Omit<RunData, 'events'>) => {
   }
 }
 
-export const getInitialRunData = () => runData;
+export const setInitialRunData = (initialRunData?: RunData) => {
+  runData = initialRunData;
+}
 
-export const getRunData = (saveData: SaveData | undefined) => {
+export const getInitialRunData = () => {
+  const pastRuns: string[] = [];
+  fs.readdirSync(LOGS_URL).forEach((file: string) => {
+    if (file.match(/^\d+.json$/)) {
+      pastRuns.push(file);
+    }
+  });
+
+  if (pastRuns.length) {
+    const lastRun = JSON.parse(fs.readFileSync(`${LOGS_URL}/${pastRuns.sort()[pastRuns.length - 1]}`, 'utf8'));
+    runData = lastRun;
+  }
+  return runData;
+};
+
+export const getRunData = (saveData: SaveData | undefined, isDebug?: boolean) => {
   if (!saveData) {
     return;
   }
+  const log = isDebug ? debugLog : console.log;
   const {
     timestamp,
     fuel,
@@ -84,7 +89,7 @@ export const getRunData = (saveData: SaveData | undefined) => {
     if (timeOfDay !== prevTimeOfDay && (distanceDriven !== 0 || biomeName === 'reef' || biomeName === 'introduction')) {
       type = 'subSegment start';
     } else {
-      if (DEBUG) {
+      if (isDebug) {
         if (on === true) {
           type = 'subSegment restart';
         } else {
@@ -97,7 +102,7 @@ export const getRunData = (saveData: SaveData | undefined) => {
 
   // These are not yet used for anything
 
-  if (DEBUG) {
+  if (isDebug) {
     if (turn === 1 && prevEventData.turn !== 1 && type !== 'start') {
       type = 'first turn';
     }
@@ -128,7 +133,7 @@ export const getRunData = (saveData: SaveData | undefined) => {
   // Just pushing every event, so we could easily compare with previous ones
   const timeFromLast = timestamp - (prevEventData.timestamp || timestamp);
   const isZeroFromLast = prevEventData.timestamp && !timeFromLast;
-  const isUnknown = type === 'unknown' && !DEBUG
+  const isUnknown = type === 'unknown' && !isDebug
   // Do not ever skip when we're at start.
   const shouldSkip = !isStart && (isZeroFromLast || isUnknown);
   const newEvent: EventData = {

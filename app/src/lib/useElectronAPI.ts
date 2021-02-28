@@ -1,6 +1,7 @@
 import React from 'react'
 import type { IpcRenderer } from "electron";
 import { isElectron as isElectronCallback } from './constants';
+import { ElectronData } from './types';
 const isElectron = isElectronCallback();
 
 declare global {
@@ -19,12 +20,33 @@ declare module 'react' {
   }
 }
 
+/** We're passing the renderer through the window, so when it appears there,
+ * we would need to rerender stuff.
+ */
 const useIpcRenderer = () => {
-  return isElectron ? window.ipcRenderer : undefined;
+  const [ipcRenderer, setIpcRenderer] = React.useState<IpcRenderer>();
+  const hasNoRenderer = !ipcRenderer;
+  React.useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (hasNoRenderer && isElectron) {
+      const checkForIpc = () => {
+        if (window.ipcRenderer) {
+          setIpcRenderer(() => window.ipcRenderer);
+        }
+      }
+      interval = setInterval(checkForIpc, 100);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    }
+  }, [hasNoRenderer]);
+  return ipcRenderer;
 }
 
-export const useElectronEvents = (events: Record<string, () => void>) => {
-  const ipcRenderer = window.ipcRenderer;
+export const useElectronEvents = (events: Record<string, (...args: any[]) => void>) => {
+  const ipcRenderer = useIpcRenderer();
   React.useEffect(() => {
     if (!ipcRenderer) {
       return
@@ -35,33 +57,29 @@ export const useElectronEvents = (events: Record<string, () => void>) => {
   }, [ipcRenderer]);
 }
 
-interface Settings {
-  savesUrl?: string;
-}
-
-export const useElectronSettings = () => {
-  const settingsState = React.useState<Settings>({})
+export const useElectronData = () => {
+  const dataState = React.useState<ElectronData>({})
   const ipcRenderer = useIpcRenderer();
 
   React.useEffect(() => {
     if (!ipcRenderer) {
       return
     }
-    ipcRenderer.on('getSettings', (e: any, settings: Settings) => {
-      settingsState[1](settings);
+    ipcRenderer.on('getElectronData', (e: any, data: ElectronData) => {
+      dataState[1](data);
     });
-    ipcRenderer.send('getSettingsRequest');
+    ipcRenderer.send('getElectronDataRequest');
   }, [ipcRenderer]);
 
-  const setSettings = React.useCallback((newSettings: Settings) => {
-    settingsState[1](prev => {
-      const value = { ...prev, ...newSettings };
+  const setData = React.useCallback((newElectronData: ElectronData) => {
+    dataState[1](prev => {
+      const value = { ...prev, ...newElectronData };
       if (ipcRenderer) {
-        ipcRenderer.send('setSettings', value);
+        ipcRenderer.send('setElectronData', value);
       }
       return value;
     });
   }, [ipcRenderer]);
 
-  return [settingsState[0], setSettings] as const;
+  return [dataState[0], setData] as const;
 }

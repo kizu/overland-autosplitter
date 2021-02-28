@@ -23,8 +23,8 @@ const styles = css`
 
 `;
 
-export const Logo: React.FunctionComponent = props => styled(styles)(
-  <h1 {...props}>
+export const Logo = ({ buildNumber, ...props }: React.PropsWithChildren<{ buildNumber?: number }>) => styled(styles)(
+  <h1 {...props} title={`Overland build №${buildNumber}`}>
     <img src="../logo.png" alt="Overland" />
   </h1>
 );

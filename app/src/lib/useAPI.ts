@@ -2,6 +2,8 @@ import React from 'react'
 import { useSSE } from 'react-hooks-sse';
 import type { RunData, Segment, SubSegmentName } from './types';
 import { isElectron, BIOME_NAME_MAP } from './constants';
+import { useElectronData } from './useElectronAPI';
+import { settings } from 'cluster';
 
 const biomeNames = Object.values(BIOME_NAME_MAP);
 
@@ -52,14 +54,12 @@ const fillSegments = (segments: Segment[]) => {
   return resultSegments;
 }
 
-const pingServer = new Event('pingServer');
-
 const useSSEdata = () => {
   const runData = useSSE<RunData | undefined>('message', undefined);
   return runData;
 }
 
-const useElectronData = () => {
+const useLatestElectronData = () => {
   const [runData, setRunData] = React.useState<RunData>();
   React.useEffect(() => {
     window.addEventListener(
@@ -69,15 +69,23 @@ const useElectronData = () => {
       },
       false
     );
-    window.dispatchEvent(pingServer);
   }, []);
   return runData;
 }
 
-const useSSEorElectron = isElectron() ? useElectronData : useSSEdata;
+const useSSEorElectron = isElectron() ? useLatestElectronData : useSSEdata;
 
 export const useAPI = (limit?: number) => {
-  const runData = useSSEorElectron();
+  const latestRunData = useSSEorElectron();
+  const [{ runData: initialRunData, ...settings }, setData] = useElectronData();
+  const [runData, setRunData] = React.useState<RunData>();
+  React.useEffect(() => {
+    setRunData(latestRunData || initialRunData);
+    if (latestRunData) {
+      setData({ runData: latestRunData });
+    }
+  }, [initialRunData, latestRunData, setData]);
+
   const { events: allEvents } = runData || { events: [] };
   const events = React.useMemo(
     () => limit === undefined ? allEvents : allEvents.slice(0, limit),
@@ -150,5 +158,5 @@ export const useAPI = (limit?: number) => {
     // We need to depend on runStart here, in order to properly recalc runs
     // with the same count of events and if the isLoading is not changed.
   }, [runStart, isLoading, events?.length]);
-  return { runData, segments, eventsCount };
+  return { runData, settings, segments, eventsCount, setData, setRunData };
 };

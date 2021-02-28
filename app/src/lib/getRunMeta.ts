@@ -2,7 +2,7 @@ import { BIOME_NAME_MAP } from './constants';
 import type { RunData } from './types';
 
 export const getRunMeta = ({ buildNumber, settings, biomeName }: RunData | undefined = {} as RunData, isForcedIL: boolean) => {
-  if (!settings) {
+  if (!settings || !biomeName) {
     return {};
   }
   let difficulty = 'unknown';

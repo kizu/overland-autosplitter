@@ -190,6 +190,15 @@ export const styles = css`
     margin-top: auto;
     padding: 5px 0;
     border-top: 3px solid;
+
+    /* Small timer */
+    & + * {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      font-size: var(--font-small);
+      opacity: var(--alpha-inactive);
+    }
   }
 
   aside {
@@ -217,6 +226,10 @@ export const styles = css`
     & > button:global(:last-child) {
       margin-top: auto;
     }
+
+    & > Logo {
+      margin: -10px -10px 0 !important;
+    }
   }
 
   button {
@@ -225,6 +238,16 @@ export const styles = css`
 
     &:hover {
       opacity: 1 !important;
+    }
+  }
+
+  label[|isOffset] {
+    display: flex;
+    font-size: var(--font-small);
+
+    & > input {
+      width: 8ch;
+      margin-left: auto;
     }
   }
 `;
