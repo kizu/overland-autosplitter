@@ -1,19 +1,20 @@
 import chokidar from 'chokidar';
-import { IpcRenderer, ipcRenderer } from "electron";
-import { setInitialRunData } from '../app/server/lib/getRunData';
+import { ipcRenderer } from "electron";
 import { fileHandler } from '../app/server/lib/fileHandler';
-import type { RunData } from '../app/src/lib/types';
+import type { SaveData } from '../app/src/lib/types';
 
 declare global {
   interface Window {
-    ipcRenderer?: IpcRenderer;
+    ipcRenderer?: typeof ipcRenderer;
   }
 }
 
 // TODO: rewrite with an ipcRenderer
-const sendDataWithEvent = (data: RunData | undefined) => {
-  const event = new CustomEvent('sendRunData', { detail: data });
-  window.dispatchEvent(event);
+const sendDataWithEvent = (saveData: SaveData | undefined) => {
+  if (!saveData) {
+    return;
+  }
+  ipcRenderer.send('sendSaveData', saveData);
 }
 
 let currentUrl: string | undefined;
@@ -37,11 +38,8 @@ const startWatcher = (url: string) => {
 window.addEventListener("DOMContentLoaded", () => {
   // Passing the ipcRenderer to the front, so it could be used easier without a require.
   window.ipcRenderer = ipcRenderer;
-  ipcRenderer.on('getInitialRunData', (e, runData: RunData) => {
-    setInitialRunData(runData);
-  });
+  ipcRenderer.send('preloadReadyForMain');
   ipcRenderer.on('getSavesUrl', (e, savesUrl: string) => {
     startWatcher(savesUrl);
   });
-  ipcRenderer.send('preloadReadyForMain');
 });

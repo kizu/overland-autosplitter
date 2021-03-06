@@ -1,4 +1,4 @@
-import { app, Menu, BrowserWindow } from "electron";
+import { app, shell, Menu, BrowserWindow } from "electron";
 import type { MenuItemConstructorOptions } from "electron";
 
 const { name } = app;
@@ -60,6 +60,10 @@ export const createMenu = (win: BrowserWindow) => {
               focusedWindow.webContents.openDevTools({ mode: 'undocked' });
             }
           }
+        },
+        {
+          label: 'Open settings folder',
+          click: () => shell.showItemInFolder(app.getPath('userData'))
         },
       ]
     },

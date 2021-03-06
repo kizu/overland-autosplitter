@@ -1,19 +1,14 @@
 import fs from 'fs';
 import xml2js from 'xml2js';
-import { RunData } from '../../src/lib/types';
+import { SaveData } from '../../src/lib/types';
 
-import { LOGS_URL } from '../../tracker-config';
-
-import { log as debugLog, writeDebugLog } from './debugLog';
-import { getRunData } from './getRunData';
+import { log as debugLog } from './debugLog';
 import { getSaveData } from './getSaveData';
 
-export const fileHandler = (handleData: (data: RunData) => void, isDebug?: boolean) => (path: string) => {
+export const fileHandler = (handleData: (data: SaveData) => void, isDebug?: boolean) => (path: string) => {
   const log = isDebug ? debugLog : console.log;
   const currentTime = new Date(Date.now()).toISOString();
-  log('FS change!', { path, currentTime })
   if (path.includes('.checkpoint') || path.includes('Profiles.') || path.includes('default.records')) {
-    log('skipping this file');
     return;
   }
   const xmlString = fs.readFileSync(path, 'utf8');
@@ -24,25 +19,15 @@ export const fileHandler = (handleData: (data: RunData) => void, isDebug?: boole
     }
 
     const saveData = getSaveData(result, currentTime);
-    const runData = getRunData(saveData);
 
     // Writing the run to the file with the name based on the start's timestamp
-    if (runData) {
-      log('Pushed to client at', new Date(Date.now()).toISOString());
+    if (saveData) {
       // Emit an SSE that contains the current 'count' as a string
-      handleData(runData);
-
-      if (isDebug) {
-        fs.writeFile(
-          `${LOGS_URL}/${runData.startDate}.json`,
-          JSON.stringify(runData, null, 2),
-          err => { if (err) return console.log(err); }
-        );
-      }
+      handleData(saveData);
     }
 
     if (isDebug) {
-      writeDebugLog();
+      log('Pushed to client at', new Date(Date.now()).toISOString());
     }
   });
 };

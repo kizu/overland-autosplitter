@@ -45,6 +45,10 @@ const useIpcRenderer = () => {
   return ipcRenderer;
 }
 
+interface PartialElectronData extends Omit<ElectronData, 'runData'> {
+  runData?: Partial<ElectronData['runData']>;
+}
+
 export const useElectronEvents = (events: Record<string, (...args: any[]) => void>) => {
   const ipcRenderer = useIpcRenderer();
   React.useEffect(() => {
@@ -65,15 +69,35 @@ export const useElectronData = () => {
     if (!ipcRenderer) {
       return
     }
-    ipcRenderer.on('getElectronData', (e: any, data: ElectronData) => {
-      dataState[1](data);
+    ipcRenderer.on('getElectronData', (e: any, newData: ElectronData) => {
+      // Merging the new data from Electron with what we have here
+      if (newData.runData?.events) {
+        dataState[1](prevData => ({
+          ...prevData,
+          ...newData,
+          runData: {
+            ...prevData.runData,
+            ...newData.runData
+          }
+        } as ElectronData));
+      }
     });
     ipcRenderer.send('getElectronDataRequest');
   }, [ipcRenderer]);
 
-  const setData = React.useCallback((newElectronData: ElectronData) => {
-    dataState[1](prev => {
-      const value = { ...prev, ...newElectronData };
+  const setData = React.useCallback((newData: PartialElectronData) => {
+    dataState[1](prevData => {
+      if (!newData) {
+        return prevData;
+      }
+      const value = {
+        ...prevData,
+        ...newData,
+        runData: {
+          ...prevData.runData,
+          ...newData.runData,
+        }
+      } as ElectronData;
       if (ipcRenderer) {
         ipcRenderer.send('setElectronData', value);
       }

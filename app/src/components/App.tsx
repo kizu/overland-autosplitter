@@ -14,24 +14,31 @@ import { useAPI } from '../lib/useAPI';
 import { useElectronEvents } from '../lib/useElectronAPI';
 import { isElectron as isElectronCallback } from '../lib/constants';
 import { FileImport } from './FileImport';
+import { RunData } from '../lib/types';
+import { useSegments } from '../lib/useSegments';
 
 const isElectron = isElectronCallback();
 
-
 const App: React.FunctionComponent = () => {
-  const [limit, setLimit] = React.useState<number>()
-  const { runData, eventsCount, segments, setData, setRunData, settings: { savesUrl } } = useAPI(limit);
+  const { runData, setData, settings: { savesUrl } } = useAPI();
+
+  const eventKeys = runData ? Object.keys(runData.events) : [];
+  const runStart = Number(eventKeys[0]);
+
+  const segments = useSegments({ runData });
 
   const [finalTimeStamp, setFinalTimeStamp] = React.useState<number>();
 
   const [isForcedIL, setIsForcedIL] = React.useState(false);
 
-  const { canBeIL, buildNumber, isIL, category, isAllDogs } = getRunMeta(runData, isForcedIL);
+  // FIXME
+  const { build: buildNumber, isAllDogs } = runData || {} as RunData;
+  const { canBeIL, isIL, category } = getRunMeta(runData, isForcedIL);
 
   const runEndTimeStamp = segments.length && (isIL ? segments[0].end : segments[segments.length - 1].end);
   const runIsEnded = Boolean(runEndTimeStamp || finalTimeStamp);
   React.useEffect(() => {
-    if (runEndTimeStamp && runData?.startDate) {
+    if (runEndTimeStamp && runStart) {
       setFinalTimeStamp(runEndTimeStamp);
     }
     //  else if (finalTimeStamp) {
@@ -62,31 +69,39 @@ const App: React.FunctionComponent = () => {
     },
     'startRun': (e, timestamp: number) => {
       setManualStart(timestamp);
-      startRun();
-      setRunData({
-        startDate: timestamp,
-        events: []
+      setData({
+        runData: {
+          manualStart: timestamp
+        }
       })
+      startRun();
+      // setRunData({
+      //   events: {}
+      // })
     },
     'endRun': (e, timestamp: number) => {
       setManualEnd(timestamp)
       setFinalTimeStamp(timestamp)
-      if (runData) {
-        setRunData({
-          ...runData,
-          endDate: timestamp
-        })
-      }
+      setData({
+        runData: {
+          manualEnd: timestamp
+        }
+      })
+      // if (runData) {
+      //   setRunData({
+      //     ...runData
+      //   })
+      // }
     }
   })
 
   const prevStartDateRef = React.useRef<number>();
   const shouldStartNewRun =
     !manualStart
-    && runData?.startDate
-    && prevStartDateRef.current !== runData?.startDate
+    && runStart
+    && prevStartDateRef.current !== runStart
     && (startOffset || endOffset || manualEnd);
-  prevStartDateRef.current = runData?.startDate;
+  prevStartDateRef.current = runStart;
   React.useEffect(() => {
     if (shouldStartNewRun) {
       startRun();
@@ -96,12 +111,12 @@ const App: React.FunctionComponent = () => {
   const shouldInitManualRun =
     manualStart
     && !manualEnd
-    && runData?.startDate
-    && manualStart !== runData.startDate
-    && manualStart < runData.startDate;
+    && runStart
+    && manualStart !== runStart
+    && manualStart < runStart;
   React.useEffect(() => {
-    if (shouldInitManualRun && runData?.startDate && manualStart) {
-      setStartOffset(runData.startDate - manualStart);
+    if (shouldInitManualRun && runStart && manualStart) {
+      setStartOffset(runStart - manualStart);
       setManualStart(undefined);
     }
   }, [shouldInitManualRun]);
@@ -131,7 +146,7 @@ const App: React.FunctionComponent = () => {
   return styled(styles)(
     <div {...use({ Root: true })}>
       <main {...use({ isElectron })}>
-      {runData && runData.startDate
+      {runData && runStart
         ? <React.Fragment>
           <Logo buildNumber={buildNumber} />
           <h2>
@@ -201,11 +216,11 @@ const App: React.FunctionComponent = () => {
           </ol>
           <output>
             {isIL
-              ? <Timer isLarge from={runData.startDate - startOffset} finalTimeStamp={(segments[0]?.end || finalTimeStamp || 0) + endOffset} />
-              : <Timer isLarge from={runData.startDate - startOffset} finalTimeStamp={(finalTimeStamp || 0) + endOffset} />
+              ? <Timer isLarge from={runStart - startOffset} finalTimeStamp={(segments[0]?.end || finalTimeStamp || 0) + endOffset} />
+              : <Timer isLarge from={runStart - startOffset} finalTimeStamp={(finalTimeStamp || 0) + endOffset} />
             }
           </output>
-          {runIsEnded ? <Timer from={runData.startDate - startOffset} /> : null}
+          {runIsEnded ? <Timer from={runStart - startOffset} /> : null}
           </React.Fragment>
         : <p>Waiting for the run to start…</p>
       }
@@ -263,11 +278,11 @@ const App: React.FunctionComponent = () => {
               />
             </label>
           </p>
-          {runData?.startDate ? <p><button type="button" onClick={() => {
-            exportFile(runData, `${runData?.startDate}.json`)
+          {runStart ? <p><button type="button" onClick={() => {
+            exportFile(runData, `${runStart}.json`)
           }}>Export run data</button></p> : null}
           <FileImport onImport={data => {
-            setRunData(data);
+            setData({ runData: data });
             setHasSettings(false);
           }} />
           <button type="button" onClick={() => setHasSettings(!hasSettings)}>Back</button>

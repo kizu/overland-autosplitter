@@ -1,39 +1,18 @@
 import { BIOME_NAME_MAP } from './constants';
-import type { RunData } from './types';
+import type { EventSegmentStart, RunData } from './types';
 
-export const getRunMeta = ({ buildNumber, settings, biomeName }: RunData | undefined = {} as RunData, isForcedIL: boolean) => {
-  if (!settings || !biomeName) {
+export const getRunMeta = (runData: RunData | undefined = {} as RunData, isForcedIL: boolean) => {
+  if (!runData) {
     return {};
   }
-  let difficulty = 'unknown';
-
-  if (settings.difficulty === 1) {
-    if (settings.touristMode) {
-      difficulty = 'Tourist';
-    } else {
-      difficulty = 'Any%';``
-    }
-  }
-
-  if (settings.difficulty === 2) {
-    difficulty = 'Hard';
-  }
-
-  if (settings.difficulty === 3) {
-    if (settings.alwaysNightMode && settings.extraCreaturesMode && settings.noReviveMode && settings.noStunMode && settings.turnTimerEnabled) {
-      difficulty = 'Ultimate';
-    } else {
-      difficulty = 'Expert';
-    }
-  }
-
+  const { difficulty, isAllDogs } = runData;
+  const biomeName = (Object.values((runData?.events || {}))[0] as EventSegmentStart)?.biome;
   const isIL = biomeName !== 'city' || isForcedIL;
 
   return {
     canBeIL: biomeName === 'city',
-    buildNumber,
     category: !isIL ? difficulty : `${BIOME_NAME_MAP[biomeName]} ${difficulty}`,
     isIL,
-    isAllDogs: settings.allDogsMode
+    isAllDogs
   };
 }
