@@ -75,10 +75,10 @@ export const useElectronData = () => {
         dataState[1](prevData => ({
           ...prevData,
           ...newData,
-          runData: {
+          runData: prevData.runData || newData.runData ? {
             ...prevData.runData,
             ...newData.runData
-          }
+          } : undefined
         } as ElectronData));
       }
     });
@@ -93,10 +93,10 @@ export const useElectronData = () => {
       const value = {
         ...prevData,
         ...newData,
-        runData: {
+        runData: prevData.runData || newData.runData ? {
           ...prevData.runData,
           ...newData.runData,
-        }
+        } : undefined
       } as ElectronData;
       if (ipcRenderer) {
         ipcRenderer.send('setElectronData', value);

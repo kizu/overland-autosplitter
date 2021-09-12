@@ -45,6 +45,10 @@ const storeRun = (runData?: RunData) => {
 
 app.on("ready", () => {
   const mainWindow = createWindow()
+
+  // Debugging
+  // mainWindow.webContents.openDevTools()
+
   attachGlobalShortcuts(mainWindow);
   createMenu(mainWindow);
 

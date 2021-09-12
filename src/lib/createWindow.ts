@@ -17,7 +17,10 @@ export const createWindow = () => {
     y: mainWindowState.y,
     webPreferences: {
       preload: path.join(__dirname, "../preload.js"),
-      nodeIntegration: true
+      nodeIntegration: true,
+      nativeWindowOpen: true,
+      // Not good, but I wrote the code using it when it was default, so…
+      contextIsolation: false
     },
     titleBarStyle: 'customButtonsOnHover',
     frame: false,

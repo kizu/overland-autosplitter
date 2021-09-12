@@ -43,16 +43,21 @@ const getSegmentEndEvent = ({ biomeName, fuel, turn }: SaveData, isBiomeTransiti
 }
 
 export const getUpdatedRunInfo = (prevRunData?: RunData, newRunData?: RunData) => {
-  if (!prevRunData || !newRunData) {
+  if (!newRunData) {
     return { hasUpdates: false }
   }
-  const prevKeys = Object.keys(prevRunData.events);
-  const prevEventsCount = prevKeys.length;
-  const prevFirstEventKey = prevKeys[0];
 
   const newKeys = Object.keys(newRunData.events);
   const eventsCount = newKeys.length;
   const firstEventKey = newKeys[0];
+
+  if (!prevRunData) {
+    return { firstEventKey, hasUpdates: true }
+  }
+
+  const prevKeys = Object.keys(prevRunData.events);
+  const prevEventsCount = prevKeys.length;
+  const prevFirstEventKey = prevKeys[0];
 
   return {
     firstEventKey,
